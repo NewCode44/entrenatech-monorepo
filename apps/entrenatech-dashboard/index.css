@@ -1,0 +1,359 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 142.4 71.8% 29.2%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Canvas Editor Styles */
+.canvas-editor {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(33, 150, 243, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(156, 39, 176, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 87, 34, 0.1) 0%, transparent 50%);
+}
+
+.canvas-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.canvas-element {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+}
+
+.canvas-element:hover {
+  border-color: rgba(33, 150, 243, 0.5);
+  box-shadow: 0 0 0 1px rgba(33, 150, 243, 0.3);
+}
+
+.canvas-element.selected {
+  border-color: #2196F3;
+  box-shadow:
+    0 0 0 1px #2196F3,
+    0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.canvas-element.dragging {
+  z-index: 1000;
+  transform: scale(1.05);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 0 2px #2196F3;
+}
+
+/* Toolbox Styles */
+.toolbox-item {
+  @apply bg-gray-800 border border-gray-800 rounded-lg p-3 cursor-grab transition-all duration-200;
+}
+
+.toolbox-item:hover {
+  @apply border-primary bg-gray-700 transform scale-105;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+}
+
+.toolbox-item:active {
+  @apply cursor-grabbing transform scale-95;
+}
+
+/* Property Panel Styles */
+.property-panel {
+  background: rgba(26, 26, 46, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.property-group {
+  @apply border-b border-gray-800 last:border-b-0;
+}
+
+.property-group-header {
+  @apply px-4 py-3 bg-gray-800 font-medium text-sm text-gray-300 border-b border-gray-800;
+}
+
+.property-item {
+  @apply px-4 py-2 hover:bg-gray-800 transition-colors;
+}
+
+/* Layer Panel Styles */
+.layer-item {
+  @apply flex items-center gap-2 px-3 py-2 hover:bg-gray-800 cursor-pointer transition-colors;
+}
+
+.layer-item.selected {
+  @apply bg-primary/20 border-l-2 border-l-primary;
+}
+
+.layer-item.hidden {
+  @apply opacity-50;
+}
+
+/* Zoom Controls */
+.zoom-controls {
+  @apply fixed bottom-4 left-4 flex items-center gap-2 bg-secondary border border-gray-800 rounded-lg p-2 z-50;
+}
+
+.zoom-button {
+  @apply w-8 h-8 flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded text-sm transition-colors;
+}
+
+/* Preview Window */
+.preview-window {
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.preview-device-frame {
+  background: #333;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(33, 150, 243, 0); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out forwards;
+}
+
+/* Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Selection Box */
+.selection-box {
+  position: absolute;
+  border: 2px dashed #2196F3;
+  background: rgba(33, 150, 243, 0.1);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Resize Handles */
+.resize-handle {
+  position: absolute;
+  background: #2196F3;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  z-index: 1001;
+}
+
+.resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
+.resize-handle.n { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+.resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
+.resize-handle.e { top: 50%; right: -4px; transform: translateY(-50%); cursor: e-resize; }
+.resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+.resize-handle.s { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+.resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+.resize-handle.w { top: 50%; left: -4px; transform: translateY(-50%); cursor: w-resize; }
+
+/* Slider Styles */
+.slider {
+  background: linear-gradient(to right, #2196F3 0%, #2196F3 var(--value, 0%), #4A5568 var(--value, 0%), #4A5568 100%);
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2196F3;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2196F3;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Keyboard shortcut styling */
+.kbd {
+  @apply inline-flex items-center px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs font-mono text-gray-300;
+}
+
+/* Grid background utility */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Color picker improvements */
+.react-colorful {
+  width: 200px !important;
+  height: 150px !important;
+}
+
+.react-colorful__saturation {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.react-colorful__hue {
+  height: 20px !important;
+  border-radius: 0 0 8px 8px !important;
+}
+
+.react-colorful__pointer {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Improved transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.0) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.0) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Enhanced focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-secondary;
+}
+
+/* Glass morphism effects */
+.glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Premium gradient text */
+.gradient-text-premium {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Pulse animation for buttons */
+.pulse-on-hover:hover {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Advanced shadows */
+.shadow-premium {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.1),
+    0 16px 32px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-premium-lg {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 4px 8px rgba(0, 0, 0, 0.12),
+    0 12px 24px rgba(0, 0, 0, 0.15),
+    0 24px 48px rgba(0, 0, 0, 0.15);
+}

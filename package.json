@@ -1,0 +1,42 @@
+{
+  "name": "entrenatech-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=entrenatech-dashboard",
+    "dev:portal": "npm run dev --workspace=member-portal",
+    "build": "npm run build --workspace=entrenatech-dashboard",
+    "build:portal": "npm run build --workspace=member-portal"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "framer-motion": "^12.23.22",
+    "react": "^19.1.1",
+    "react-colorful": "^5.6.1",
+    "react-dom": "^19.1.1",
+    "react-hotkeys-hook": "^5.1.0",
+    "recharts": "2.12.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.21",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.544.0",
+    "postcss": "^8.5.6",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^3.4.1",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "~5.8.2",
+    "vite": "^5.4.0",
+    "vite-tsconfig-paths": "^4.3.2"
+  }
+}
