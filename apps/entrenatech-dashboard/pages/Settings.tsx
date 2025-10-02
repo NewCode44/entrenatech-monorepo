@@ -77,7 +77,7 @@ const Settings: React.FC = () => {
               <p className="text-gray-500">Personaliza las funcionalidades del member portal</p>
             </div>
           </div>
-          <button className="btn-primary flex items-center gap-2">
+          <button className="flex items-center gap-2 bg-primary hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
             <Icon name="Save" className="w-4 h-4" />
             Guardar Cambios
           </button>

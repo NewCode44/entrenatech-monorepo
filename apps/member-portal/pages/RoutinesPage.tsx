@@ -126,7 +126,7 @@ const RoutinesPage: React.FC = () => {
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-purple-600 hover:to-pink-600 active:scale-95"
             >
               <Sparkles className="h-4 w-4" />
-              AI Personal Trainer
+              Entrenador Virtual
             </button>
           )}
         </div>

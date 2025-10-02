@@ -91,7 +91,7 @@ const AINutritionistGenerator: React.FC<AINutritionistGeneratorProps> = ({ onClo
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500">
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-white">AI Nutriólogo</h2>
+                <h2 className="text-2xl font-bold text-white">Nutriólogo Virtual</h2>
               </div>
               <p className="text-sm text-zinc-400">
                 Genera tu plan nutricional personalizado con inteligencia artificial

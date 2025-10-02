@@ -100,7 +100,7 @@ const LiveStreaming: React.FC = () => {
         </div>
         <button
           onClick={() => setAddModalOpen(true)}
-          className="btn-primary flex items-center gap-2"
+          className="flex items-center gap-2 bg-primary hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
         >
           <Icon name="Radio" className="w-5 h-5" />
           Programar Clase
@@ -222,18 +222,23 @@ const LiveStreaming: React.FC = () => {
 
       {/* Add Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="glass-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">Programar Clase en Vivo</h2>
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-fade-in" onClick={() => setAddModalOpen(false)}>
+          <div className="bg-secondary rounded-xl border border-gray-800 shadow-xl w-full max-w-2xl relative animate-slide-up flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Programar Clase en Vivo</h3>
+                  <p className="text-sm text-gray-500">Configura una nueva transmisión en vivo</p>
+                </div>
                 <button
                   onClick={() => setAddModalOpen(false)}
-                  className="text-gray-500 hover:text-white transition-colors"
+                  className="p-1 text-gray-500 hover:text-white rounded-full hover:bg-gray-800"
                 >
-                  <Icon name="X" className="w-6 h-6" />
+                  <Icon name="X" className="w-5 h-5" />
                 </button>
               </div>
+            </div>
+            <div className="p-6 overflow-y-auto">
 
               <div className="space-y-4">
                 <div>
@@ -321,22 +326,22 @@ const LiveStreaming: React.FC = () => {
                     Soporta: YouTube Live, Zoom, Google Meet, etc.
                   </p>
                 </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => setAddModalOpen(false)}
-                    className="flex-1 px-6 py-3 rounded-xl border border-zinc-800 hover:bg-zinc-900/50 text-white font-semibold transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleAddClass}
-                    className="flex-1 btn-primary"
-                  >
-                    Programar Clase
-                  </button>
-                </div>
               </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-800 flex gap-3">
+              <button
+                onClick={() => setAddModalOpen(false)}
+                className="flex-1 px-6 py-3 rounded-lg border border-gray-800 hover:bg-gray-700 text-white font-semibold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAddClass}
+                className="flex-1 px-6 py-3 bg-primary hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Programar Clase
+              </button>
             </div>
           </div>
         </div>

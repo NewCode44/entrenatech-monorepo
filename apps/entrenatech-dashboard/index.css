@@ -36,6 +36,24 @@
   }
 }
 
+@layer components {
+  .btn-primary {
+    @apply flex items-center gap-2 bg-primary hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors;
+  }
+
+  .stats-card {
+    @apply bg-secondary p-6 rounded-xl border border-gray-800;
+  }
+
+  .glass-card {
+    @apply bg-secondary rounded-xl border border-gray-800;
+  }
+
+  .input-field {
+    @apply w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors;
+  }
+}
+
 /* Canvas Editor Styles */
 .canvas-editor {
   position: relative;

@@ -110,7 +110,7 @@ const PortalContent: React.FC = () => {
         </div>
         <button
           onClick={() => setAddModalOpen(true)}
-          className="btn-primary flex items-center gap-2"
+          className="flex items-center gap-2 bg-primary hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
         >
           <Icon name="Plus" className="w-5 h-5" />
           Agregar Contenido
@@ -274,20 +274,27 @@ const PortalContent: React.FC = () => {
 
       {/* Add Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="glass-card max-w-2xl w-full">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">
-                  Agregar {activeTab === 'workouts' ? 'Estilo de Entrenamiento' : activeTab === 'quotes' ? 'Frase' : 'Banner'}
-                </h2>
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-fade-in" onClick={() => setAddModalOpen(false)}>
+          <div className="bg-secondary rounded-xl border border-gray-800 shadow-xl w-full max-w-2xl relative animate-slide-up flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white">
+                    Agregar {activeTab === 'workouts' ? 'Estilo de Entrenamiento' : activeTab === 'quotes' ? 'Frase' : 'Banner'}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {activeTab === 'workouts' ? 'Nuevo estilo de entrenamiento' : activeTab === 'quotes' ? 'Nueva frase motivacional' : 'Nuevo banner promocional'}
+                  </p>
+                </div>
                 <button
                   onClick={() => setAddModalOpen(false)}
-                  className="text-gray-500 hover:text-white transition-colors"
+                  className="p-1 text-gray-500 hover:text-white rounded-full hover:bg-gray-800"
                 >
-                  <Icon name="X" className="w-6 h-6" />
+                  <Icon name="X" className="w-5 h-5" />
                 </button>
               </div>
+            </div>
+            <div className="p-6">
 
               {activeTab === 'workouts' && (
                 <div className="space-y-4">
@@ -324,9 +331,6 @@ const PortalContent: React.FC = () => {
                     <option value="Intermedio">Intermedio</option>
                     <option value="Avanzado">Avanzado</option>
                   </select>
-                  <button onClick={addWorkoutStyle} className="btn-primary w-full">
-                    Agregar Estilo
-                  </button>
                 </div>
               )}
 
@@ -346,9 +350,6 @@ const PortalContent: React.FC = () => {
                     onChange={(e) => setNewQuote({ ...newQuote, author: e.target.value })}
                     className="input-field"
                   />
-                  <button onClick={addQuote} className="btn-primary w-full">
-                    Agregar Frase
-                  </button>
                 </div>
               )}
 
@@ -368,11 +369,23 @@ const PortalContent: React.FC = () => {
                     className="input-field"
                     rows={2}
                   />
-                  <button onClick={addBanner} className="btn-primary w-full">
-                    Agregar Banner
-                  </button>
                 </div>
               )}
+            </div>
+
+            <div className="p-4 border-t border-gray-800 flex gap-3">
+              <button
+                onClick={() => setAddModalOpen(false)}
+                className="flex-1 px-6 py-3 rounded-lg border border-gray-800 hover:bg-gray-700 text-white font-semibold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={activeTab === 'workouts' ? addWorkoutStyle : activeTab === 'quotes' ? addQuote : addBanner}
+                className="flex-1 px-6 py-3 bg-primary hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Agregar {activeTab === 'workouts' ? 'Estilo' : activeTab === 'quotes' ? 'Frase' : 'Banner'}
+              </button>
             </div>
           </div>
         </div>
