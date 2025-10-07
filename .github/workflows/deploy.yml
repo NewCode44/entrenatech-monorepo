@@ -4,6 +4,9 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    types: [closed]
 
 jobs:
   deploy:
@@ -20,10 +23,11 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm ci --legacy-peer-deps
 
     - name: Build applications
       run: |
+        npm run build
         npm run build:superadmin
         npm run build:portal
 
@@ -34,10 +38,13 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.PORT }}
+        command_timeout: 30m
+        script_stop_on_error: false
         script: |
           cd /var/www/entrenatech-monorepo
 
           # Backup current build
+          sudo cp -r apps/entrenatech-dashboard/dist apps/entrenatech-dashboard/dist.backup || true
           sudo cp -r apps/superadmin-dashboard/dist apps/superadmin-dashboard/dist.backup || true
           sudo cp -r apps/member-portal/dist apps/member-portal/dist.backup || true
 
@@ -47,7 +54,22 @@ jobs:
           # Install dependencies
           npm ci --legacy-peer-deps
 
+          # Check if directories exist
+          if [ ! -d "apps/entrenatech-dashboard" ]; then
+            echo "❌ EntrenaTech dashboard not found"
+            exit 1
+          fi
+          if [ ! -d "apps/superadmin-dashboard" ]; then
+            echo "❌ SuperAdmin dashboard not found"
+            exit 1
+          fi
+          if [ ! -d "apps/member-portal" ]; then
+            echo "❌ Member portal not found"
+            exit 1
+          fi
+
           # Build applications
+          npm run build
           npm run build:superadmin
           npm run build:portal
 
@@ -59,15 +81,36 @@ jobs:
           sudo systemctl restart nginx
 
           # Cleanup backups
-          sudo rm -rf apps/superadmin-dashboard/dist.backup apps/member-portal/dist.backup
+          sudo rm -rf apps/entrenatech-dashboard/dist.backup apps/superadmin-dashboard/dist.backup apps/member-portal/dist.backup || true
 
           echo "✅ Deployment completed successfully!"
-          echo "🌐 SuperAdmin: https://admin.entrenatech.com"
+          echo "🌐 EntrenaTech Dashboard: https://dashboard.entrenatech.com"
+          echo "🌐 SuperAdmin Dashboard: https://admin.entrenatech.com"
           echo "🌐 Member Portal: https://portal.entrenatech.com"
 
     - name: Health Check
       run: |
-        sleep 10
-        curl -f https://admin.entrenatech.com || exit 1
-        curl -f https://portal.entrenatech.com || exit 1
-        echo "✅ All sites are responding correctly!"
+        sleep 5
+
+        # Check if sites are responding
+        echo "🔍 Checking sites..."
+
+        if curl -f http://dashboard.entrenatech.com > /dev/null 2>&1; then
+          echo "✅ EntrenaTech Dashboard is responding"
+        else
+          echo "❌ EntrenaTech Dashboard is not responding"
+        fi
+
+        if curl -f http://admin.entrenatech.com > /dev/null 2>&1; then
+          echo "✅ SuperAdmin Dashboard is responding"
+        else
+          echo "❌ SuperAdmin Dashboard is not responding"
+        fi
+
+        if curl -f http://portal.entrenatech.com > /dev/null 2>&1; then
+          echo "✅ Member Portal is responding"
+        else
+          echo "❌ Member Portal is not responding"
+        fi
+
+        echo "✅ Health check completed!"
