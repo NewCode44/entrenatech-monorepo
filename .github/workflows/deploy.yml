@@ -1,0 +1,73 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build applications
+      run: |
+        npm run build:superadmin
+        npm run build:portal
+
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cd /var/www/entrenatech-monorepo
+
+          # Backup current build
+          sudo cp -r apps/superadmin-dashboard/dist apps/superadmin-dashboard/dist.backup || true
+          sudo cp -r apps/member-portal/dist apps/member-portal/dist.backup || true
+
+          # Pull latest changes
+          git pull origin main
+
+          # Install dependencies
+          npm ci --legacy-peer-deps
+
+          # Build applications
+          npm run build:superadmin
+          npm run build:portal
+
+          # Fix permissions
+          sudo chown -R www-data:www-data /var/www/entrenatech-monorepo
+          sudo chmod -R 755 /var/www/entrenatech-monorepo/apps/*/dist
+
+          # Restart Nginx
+          sudo systemctl restart nginx
+
+          # Cleanup backups
+          sudo rm -rf apps/superadmin-dashboard/dist.backup apps/member-portal/dist.backup
+
+          echo "✅ Deployment completed successfully!"
+          echo "🌐 SuperAdmin: https://admin.entrenatech.com"
+          echo "🌐 Member Portal: https://portal.entrenatech.com"
+
+    - name: Health Check
+      run: |
+        sleep 10
+        curl -f https://admin.entrenatech.com || exit 1
+        curl -f https://portal.entrenatech.com || exit 1
+        echo "✅ All sites are responding correctly!"

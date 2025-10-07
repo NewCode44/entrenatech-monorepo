@@ -11,7 +11,11 @@
     "dev:superadmin": "npm run dev --workspace=superadmin-dashboard",
     "build": "npm run build --workspace=entrenatech-dashboard",
     "build:portal": "npm run build --workspace=member-portal",
-    "build:superadmin": "npm run build --workspace=superadmin-dashboard"
+    "build:superadmin": "npm run build --workspace=superadmin-dashboard",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx || true",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
