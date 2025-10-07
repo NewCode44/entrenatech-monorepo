@@ -10,7 +10,7 @@ const MusicPlayer: React.FC = () => {
     return (
       <div
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-md cursor-pointer px-4 pb-16"
+        className="fixed bottom-0 left-0 right-0 z-20 mx-auto max-w-md cursor-pointer px-4 pb-16"
       >
         <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white/95 p-3 shadow-lg backdrop-blur-xl hover:border-cyan-300 hover:shadow-xl transition-all">
           <button
@@ -33,7 +33,7 @@ const MusicPlayer: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-md px-4 pb-16">
+    <div className="fixed bottom-0 left-0 right-0 z-20 mx-auto max-w-md px-4 pb-16">
       <div className="relative rounded-2xl border border-zinc-200 bg-white/95 p-5 shadow-2xl backdrop-blur-xl">
         {/* BOTÓN MINIMIZAR */}
         <div className="mb-3 flex justify-end">
@@ -44,7 +44,6 @@ const MusicPlayer: React.FC = () => {
               setIsMinimized(true);
             }}
             className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2 text-white shadow-lg hover:from-cyan-400 hover:to-blue-400 transition-all font-semibold text-sm active:scale-95"
-            style={{ zIndex: 99999 }}
           >
             <ChevronDown className="h-5 w-5" />
             Minimizar

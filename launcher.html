@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EntrénaTech - Launcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .app-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .app-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .app-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .app-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .app-description {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .app-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .app-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            color: white;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .instructions h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .instructions ol {
+            text-align: left;
+            padding-left: 2rem;
+            line-height: 1.8;
+        }
+
+        .instructions code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #4ade80;
+            box-shadow: 0 0 10px #4ade80;
+        }
+
+        .status-offline {
+            background: #f87171;
+            box-shadow: 0 0 10px #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏋️ EntrénaTech</h1>
+        <p class="subtitle">Plataforma de Gestión de Fitness</p>
+
+        <div class="apps-grid">
+            <!-- Dashboard Card -->
+            <div class="app-card">
+                <div class="app-icon">📊</div>
+                <h2 class="app-title">Dashboard</h2>
+                <p class="app-description">Panel de administración para entrenadores y gestión de gimnasio</p>
+                <div class="status">
+                    <span class="status-indicator" id="dashboard-status"></span>
+                    <span id="dashboard-text">Verificando...</span>
+                </div>
+                <a href="http://localhost:5173" target="_blank" class="app-button" onclick="checkServer('dashboard')">
+                    Abrir Dashboard
+                </a>
+            </div>
+
+            <!-- Member Portal Card -->
+            <div class="app-card">
+                <div class="app-icon">💪</div>
+                <h2 class="app-title">Portal de Miembros</h2>
+                <p class="app-description">Portal para miembros con rutinas, progreso y nutrición</p>
+                <div class="status">
+                    <span class="status-indicator" id="portal-status"></span>
+                    <span id="portal-text">Verificando...</span>
+                </div>
+                <a href="http://localhost:3002" target="_blank" class="app-button" onclick="checkServer('portal')">
+                    Abrir Portal
+                </a>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h2>📋 Instrucciones de Uso</h2>
+            <ol>
+                <li>Abre dos terminales en: <code>entrenatech dashboard</code></li>
+                <li>En la terminal 1: <code>npm run dev</code> (Dashboard - puerto 5173)</li>
+                <li>En la terminal 2: <code>npm run dev:portal</code> (Portal - puerto 3002)</li>
+                <li>Haz clic en los botones de arriba para abrir cada aplicación</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        async function checkServer(type) {
+            const url = type === 'dashboard' ? 'http://localhost:5173' : 'http://localhost:3002';
+            const statusId = type === 'dashboard' ? 'dashboard-status' : 'portal-status';
+            const textId = type === 'dashboard' ? 'dashboard-text' : 'portal-text';
+
+            try {
+                const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+                document.getElementById(statusId).className = 'status-indicator status-online';
+                document.getElementById(textId).textContent = 'En línea ✓';
+                return true;
+            } catch (error) {
+                document.getElementById(statusId).className = 'status-indicator status-offline';
+                document.getElementById(textId).textContent = 'Sin conexión - Inicia el servidor';
+                return false;
+            }
+        }
+
+        // Check status on load
+        window.addEventListener('load', () => {
+            checkServer('dashboard');
+            checkServer('portal');
+
+            // Recheck every 5 seconds
+            setInterval(() => {
+                checkServer('dashboard');
+                checkServer('portal');
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

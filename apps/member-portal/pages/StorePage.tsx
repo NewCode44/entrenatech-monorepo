@@ -145,7 +145,7 @@ const StorePage: React.FC = () => {
 
       {/* Categories */}
       <div className="mb-6">
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {categories.map((cat) => {
             const Icon = cat.icon;
             const isActive = selectedCategory === cat.id;
@@ -153,13 +153,13 @@ const StorePage: React.FC = () => {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all ${
                   isActive
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
-                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg scale-105'
+                    : 'bg-white border-2 border-zinc-200 text-zinc-600 hover:border-cyan-400 hover:shadow-md'
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-5 w-5" />
                 {cat.label}
               </button>
             );

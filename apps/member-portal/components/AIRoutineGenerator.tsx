@@ -105,8 +105,8 @@ const AIRoutineGenerator: React.FC<AIRoutineGeneratorProps> = ({ onClose, onGene
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-800/50 bg-zinc-950/95 shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-3xl my-8 rounded-2xl border border-zinc-800/50 bg-zinc-950/95 shadow-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="sticky top-0 z-10 border-b border-zinc-800/50 bg-zinc-950/95 p-6 backdrop-blur-xl">
           <div className="flex items-start justify-between">
@@ -155,7 +155,7 @@ const AIRoutineGenerator: React.FC<AIRoutineGeneratorProps> = ({ onClose, onGene
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {/* Step 1: Objetivo y Nivel */}
           {step === 1 && (
             <div className="space-y-6">
