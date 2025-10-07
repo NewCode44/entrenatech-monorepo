@@ -27,6 +27,7 @@ jobs:
 
     - name: Build applications
       run: |
+        npm run build:login
         npm run build
         npm run build:superadmin
         npm run build:portal
@@ -44,6 +45,7 @@ jobs:
           cd /var/www/entrenatech-monorepo
 
           # Backup current build
+          sudo cp -r apps/login-app/dist apps/login-app/dist.backup || true
           sudo cp -r apps/entrenatech-dashboard/dist apps/entrenatech-dashboard/dist.backup || true
           sudo cp -r apps/superadmin-dashboard/dist apps/superadmin-dashboard/dist.backup || true
           sudo cp -r apps/member-portal/dist apps/member-portal/dist.backup || true
@@ -55,6 +57,10 @@ jobs:
           npm ci --legacy-peer-deps
 
           # Check if directories exist
+          if [ ! -d "apps/login-app" ]; then
+            echo "❌ Login app not found"
+            exit 1
+          fi
           if [ ! -d "apps/entrenatech-dashboard" ]; then
             echo "❌ EntrenaTech dashboard not found"
             exit 1
@@ -69,6 +75,7 @@ jobs:
           fi
 
           # Build applications
+          npm run build:login
           npm run build
           npm run build:superadmin
           npm run build:portal
@@ -81,9 +88,10 @@ jobs:
           sudo systemctl restart nginx
 
           # Cleanup backups
-          sudo rm -rf apps/entrenatech-dashboard/dist.backup apps/superadmin-dashboard/dist.backup apps/member-portal/dist.backup || true
+          sudo rm -rf apps/login-app/dist.backup apps/entrenatech-dashboard/dist.backup apps/superadmin-dashboard/dist.backup apps/member-portal/dist.backup || true
 
           echo "✅ Deployment completed successfully!"
+          echo "🌐 Login Principal: https://entrenatech.com"
           echo "🌐 EntrenaTech Dashboard: https://dashboard.entrenatech.com"
           echo "🌐 SuperAdmin Dashboard: https://admin.entrenatech.com"
           echo "🌐 Member Portal: https://portal.entrenatech.com"
@@ -94,6 +102,12 @@ jobs:
 
         # Check if sites are responding
         echo "🔍 Checking sites..."
+
+        if curl -f http://entrenatech.com > /dev/null 2>&1; then
+          echo "✅ Login Principal is responding"
+        else
+          echo "❌ Login Principal is not responding"
+        fi
 
         if curl -f http://dashboard.entrenatech.com > /dev/null 2>&1; then
           echo "✅ EntrenaTech Dashboard is responding"
