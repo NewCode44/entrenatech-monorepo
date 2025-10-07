@@ -11,17 +11,17 @@ import { SettingsPage } from '../pages/settings/settings-page';
 
 export const router = createBrowserRouter([
   {
-    path: '/admin/',
+    path: '/',
     element: <AppLayout />,
     children: [
-      { path: '/admin/', element: <DashboardPage /> },
-      { path: '/admin/dashboard', element: <DashboardPage /> },
-      { path: '/admin/gyms', element: <GymsListPage /> },
-      { path: '/admin/gyms/:gymId', element: <GymDetailPage /> },
-      { path: '/admin/mikrotiks', element: <MikrotiksListPage /> },
-      { path: '/admin/mikrotiks/:mikrotikId', element: <MikrotikDetailPage /> },
-      { path: '/admin/analytics', element: <AnalyticsPage /> },
-      { path: '/admin/settings', element: <SettingsPage /> },
+      { path: '/', element: <DashboardPage /> },
+      { path: '/dashboard', element: <DashboardPage /> },
+      { path: '/gyms', element: <GymsListPage /> },
+      { path: '/gyms/:gymId', element: <GymDetailPage /> },
+      { path: '/mikrotiks', element: <MikrotiksListPage /> },
+      { path: '/mikrotiks/:mikrotikId', element: <MikrotikDetailPage /> },
+      { path: '/analytics', element: <AnalyticsPage /> },
+      { path: '/settings', element: <SettingsPage /> },
     ],
   },
   {
