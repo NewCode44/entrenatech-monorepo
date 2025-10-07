@@ -1,0 +1,64 @@
+name: Test Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Test Build
+      run: |
+        echo "🧪 Testing build process..."
+        npm ci --legacy-peer-deps
+
+        echo "🏗️ Building SuperAdmin..."
+        npm run build:superadmin
+
+        echo "🏗️ Building Member Portal..."
+        npm run build:portal
+
+        echo "✅ All builds successful!"
+
+    - name: Check Build Outputs
+      run: |
+        echo "🔍 Verifying build outputs..."
+
+        if [ -d "apps/superadmin-dashboard/dist" ]; then
+          echo "✅ SuperAdmin build output exists"
+          ls -la apps/superadmin-dashboard/dist/
+        else
+          echo "❌ SuperAdmin build output missing"
+          exit 1
+        fi
+
+        if [ -d "apps/member-portal/dist" ]; then
+          echo "✅ Member Portal build output exists"
+          ls -la apps/member-portal/dist/
+        else
+          echo "❌ Member Portal build output missing"
+          exit 1
+        fi
+
+        echo "🎉 All build outputs verified!"
+
+    - name: Archive Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-files
+        path: |
+          apps/superadmin-dashboard/dist
+          apps/member-portal/dist
+        retention-days: 30
