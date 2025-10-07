@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
         host: 'localhost',
       },
       plugins: [react()],
+      base: '/dashboard/',
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
@@ -21,6 +22,10 @@ export default defineConfig(({ mode }) => {
           { find: '@/utils', replacement: path.resolve(__dirname, '../../libs/utils') },
           { find: '@', replacement: path.resolve(__dirname, '.') },
         ]
+      },
+      build: {
+        outDir: 'dist',
+        assetsDir: 'assets',
       }
     };
 });

@@ -24,4 +24,8 @@ export const router = createBrowserRouter([
       { path: '/settings', element: <SettingsPage /> },
     ],
   },
+  {
+    path: '*',
+    element: <div>404 Not Found</div>,
+  },
 ]);
