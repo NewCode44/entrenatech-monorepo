@@ -168,16 +168,16 @@ const DashboardSuperAdmin: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard SuperAdmin</h1>
-          <p className="text-gray-600 dark:text-gray-400">Vista general de toda la plataforma EntrenaTech</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Vista general de toda la plataforma EntrenaTech</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getSystemHealthColor(stats.systemHealth)}`}>
-            <Activity className="w-3 h-3 mr-1" />
+          <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getSystemHealthColor(stats.systemHealth)}`}>
+            <Activity className="w-4 h-4 mr-2" />
             {getSystemHealthText(stats.systemHealth)}
           </span>
         </div>
@@ -189,8 +189,8 @@ const DashboardSuperAdmin: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Gimnasios</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalGyms}</p>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{stats.totalGyms}</p>
+              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                 {stats.activeGyms} activos
               </p>
             </div>
@@ -204,10 +204,10 @@ const DashboardSuperAdmin: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Miembros</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                 {stats.totalMembers.toLocaleString()}
               </p>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                 +{stats.newSignups} hoy
               </p>
             </div>
@@ -221,10 +221,10 @@ const DashboardSuperAdmin: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos Totales</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                 ${stats.totalRevenue.toLocaleString()}
               </p>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                 +12.5% este mes
               </p>
             </div>
@@ -238,8 +238,8 @@ const DashboardSuperAdmin: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Dispositivos Red</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalMikrotiks}</p>
-              <p className={`text-xs mt-1 ${
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{stats.totalMikrotiks}</p>
+              <p className={`text-sm mt-1 ${
                 stats.onlineMikrotiks === stats.totalMikrotiks
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-yellow-600 dark:text-yellow-400'
@@ -254,11 +254,11 @@ const DashboardSuperAdmin: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actividad Reciente</h2>
-          <div className="space-y-4">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Actividad Reciente</h2>
+          <div className="space-y-6">
             {recentActivity.map((activity) => (
               <div key={activity.id} className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg ${getActivityColor(activity.status)}`}>
@@ -278,9 +278,9 @@ const DashboardSuperAdmin: React.FC = () => {
         </div>
 
         {/* System Status */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Estado del Sistema</h2>
-          <div className="space-y-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Estado del Sistema</h2>
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Server className="w-4 h-4 text-gray-400" />
@@ -329,31 +329,31 @@ const DashboardSuperAdmin: React.FC = () => {
       </div>
 
       {/* Top Gyms */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Gimnasios Top</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Gimnasios Top</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Gimnasio</th>
-                <th className="text-left py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Miembros</th>
-                <th className="text-left py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos</th>
-                <th className="text-left py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Crecimiento</th>
+                <th className="text-left py-4 text-sm font-medium text-gray-600 dark:text-gray-400">Gimnasio</th>
+                <th className="text-left py-4 text-sm font-medium text-gray-600 dark:text-gray-400">Miembros</th>
+                <th className="text-left py-4 text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos</th>
+                <th className="text-left py-4 text-sm font-medium text-gray-600 dark:text-gray-400">Crecimiento</th>
               </tr>
             </thead>
             <tbody>
               {topGyms.map((gym) => (
                 <tr key={gym.id} className="border-b border-gray-100 dark:border-gray-800">
-                  <td className="py-3">
+                  <td className="py-4">
                     <div className="font-medium text-gray-900 dark:text-white">{gym.name}</div>
                   </td>
-                  <td className="py-3">
+                  <td className="py-4">
                     <div className="text-gray-900 dark:text-white">{gym.members.toLocaleString()}</div>
                   </td>
-                  <td className="py-3">
+                  <td className="py-4">
                     <div className="text-gray-900 dark:text-white">${gym.revenue.toLocaleString()}</div>
                   </td>
-                  <td className="py-3">
+                  <td className="py-4">
                     <div className={`text-sm font-medium ${
                       gym.growth > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                     }`}>
