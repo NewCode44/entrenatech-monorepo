@@ -48,6 +48,7 @@ jobs:
           sudo cp -r apps/login-app/dist apps/login-app/dist.backup || true
           sudo cp -r apps/entrenatech-dashboard/dist apps/entrenatech-dashboard/dist.backup || true
           sudo cp -r apps/superadmin-dashboard/dist apps/superadmin-dashboard/dist.backup || true
+          sudo cp -r apps/superadmin-dashboard-new/dist apps/superadmin-dashboard-new/dist.backup || true
           sudo cp -r apps/member-portal/dist apps/member-portal/dist.backup || true
 
           # Pull latest changes
@@ -78,6 +79,7 @@ jobs:
           npm run build:login
           npm run build
           npm run build:superadmin
+          npm run build:superadmin-new
           npm run build:portal
 
           # Fix permissions
@@ -88,7 +90,7 @@ jobs:
           sudo systemctl restart nginx
 
           # Cleanup backups
-          sudo rm -rf apps/login-app/dist.backup apps/entrenatech-dashboard/dist.backup apps/superadmin-dashboard/dist.backup apps/member-portal/dist.backup || true
+          sudo rm -rf apps/login-app/dist.backup apps/entrenatech-dashboard/dist.backup apps/superadmin-dashboard/dist.backup apps/superadmin-dashboard-new/dist.backup apps/member-portal/dist.backup || true
 
           echo "✅ Deployment completed successfully!"
           echo "🌐 Login Principal: https://entrenatech.com"

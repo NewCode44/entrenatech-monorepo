@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  superadmin-dashboard:
+    build:
+      context: ..
+      dockerfile: superadmin-docker/Dockerfile
+    container_name: entrenatech-superadmin
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - entrenatech-network
+
+networks:
+  entrenatech-network:
+    driver: bridge

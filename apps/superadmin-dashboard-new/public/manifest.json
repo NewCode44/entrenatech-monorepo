@@ -1,0 +1,111 @@
+{
+  "name": "Entrenatech - Plataforma Fitness Premium",
+  "short_name": "Entrenatech",
+  "description": "Tu compañero fitness definitivo - Entrenamientos, progreso y motivación en una sola app",
+  "theme_color": "#ef4444",
+  "background_color": "#1f2937",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "categories": ["health-fitness", "lifestyle", "sports"],
+  "lang": "es-MX",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Entrenatech Desktop Dashboard"
+    },
+    {
+      "src": "/screenshots/mobile.png", 
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Entrenatech Mobile App"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mis Entrenamientos",
+      "short_name": "Workouts",
+      "description": "Acceso directo a tus rutinas de entrenamiento",
+      "url": "/workouts",
+      "icons": [{ "src": "/icons/workout-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Mi Progreso",
+      "short_name": "Progress",
+      "description": "Ve tu progreso y estadísticas fitness",
+      "url": "/progress",
+      "icons": [{ "src": "/icons/progress-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Clases en Vivo",
+      "short_name": "Live",
+      "description": "Únete a clases grupales en tiempo real",
+      "url": "/live-classes",
+      "icons": [{ "src": "/icons/live-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Nutrición",
+      "short_name": "Nutrition",
+      "description": "Planes de alimentación personalizados",
+      "url": "/nutrition",
+      "icons": [{ "src": "/icons/nutrition-icon.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

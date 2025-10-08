@@ -1,0 +1,24 @@
+FROM nginx:alpine
+
+# Crear directorio para la aplicación
+RUN mkdir -p /usr/share/nginx/html/admin
+
+# Copiar archivos del SuperAdmin Dashboard directamente
+COPY apps/superadmin-dashboard/dist/ /usr/share/nginx/html/admin/
+
+# Configurar nginx para servir en /admin
+RUN echo 'server { \
+    listen 80; \
+    server_name _; \
+    location /admin { \
+        alias /usr/share/nginx/html/admin; \
+        try_files \$uri \$uri/ /admin/index.html; \
+    } \
+    location / { \
+        return 301 /admin; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
