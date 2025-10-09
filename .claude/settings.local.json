@@ -17,7 +17,11 @@
       "Bash(taskkill:*)",
       "Bash(cmd:*)",
       "Read(//c/Users/Ramiro/Desktop/modulos de servicios tu portal te conecta/entrenatech/**)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(scp:*)",
+      "Bash(npm run build:*)",
+      "Bash(rsync:*)"
     ],
     "deny": [],
     "ask": []

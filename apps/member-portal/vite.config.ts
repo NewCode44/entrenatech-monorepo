@@ -21,8 +21,8 @@ export default defineConfig({
         background_color: '#0F0F23',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/portal/',
-        scope: '/portal/',
+        start_url: '/member/',
+        scope: '/member/',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -63,7 +63,7 @@ export default defineConfig({
       }
     })
   ],
-  base: '/portal/',
+  base: '/member/',
   resolve: {
     alias: [
       { find: '@', replacement: path.resolve(__dirname, '.') },

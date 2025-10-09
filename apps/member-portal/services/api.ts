@@ -1,6 +1,6 @@
 // API Service for Member Portal Backend Integration
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://5.161.196.136/api';
 
 interface ApiResponse<T = any> {
   success: boolean;

@@ -111,9 +111,9 @@ export class AuthService {
         return '/admin';
       case 'gym_owner':
       case 'trainer':
-        return '/dashboard';
+        return '/owner';
       case 'member':
-        return '/portal';
+        return '/member';
       default:
         return '/login';
     }
