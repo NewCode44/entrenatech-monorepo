@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Building2,
   Users,
@@ -12,8 +12,11 @@ import {
   Trash2,
   Shield,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw,
+  X
 } from 'lucide-react';
+import { apiService } from '@/services/api';
 
 interface Gym {
   id: string;
@@ -76,7 +79,123 @@ const GymsManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [gyms, setGyms] = useState(mockGyms);
+  const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
+
+  // Load gyms from API
+  const loadGyms = async (page = 1, append = false) => {
+    try {
+      if (!append) setLoading(true);
+
+      const response = await apiService.getGyms({
+        page,
+        limit: pagination.limit,
+        search: searchTerm,
+        status: statusFilter === 'all' ? '' : statusFilter,
+        sortBy: 'created_at',
+        sortOrder: 'DESC',
+      });
+
+      if (response.success && response.data) {
+        const newGyms = response.data.map((gym: any) => ({
+          id: gym.id,
+          name: gym.name,
+          owner: gym.owner_name,
+          email: gym.email,
+          phone: gym.phone,
+          members: gym.active_members || 0,
+          status: gym.status,
+          revenue: gym.total_revenue || 0,
+          joinDate: new Date(gym.created_at).toLocaleDateString(),
+          lastActive: new Date(gym.updated_at).toLocaleDateString(),
+          plan: gym.plan,
+        }));
+
+        setGyms(prev => append ? [...prev, ...newGyms] : newGyms);
+        if (response.pagination) {
+          setPagination(response.pagination);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load gyms:', error);
+      showNotification('error', 'Failed to load gyms');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadGyms(1);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, statusFilter]);
+
+  // Initial load
+  useEffect(() => {
+    loadGyms();
+  }, []);
+
+  // Show notification
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  // Handle delete gym
+  const handleDeleteGym = async (gymId: string) => {
+    if (!confirm('Are you sure you want to delete this gym? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await apiService.deleteGym(gymId);
+      if (response.success) {
+        setGyms(gyms.filter(gym => gym.id !== gymId));
+        showNotification('success', 'Gym deleted successfully');
+      } else {
+        showNotification('error', response.message || 'Failed to delete gym');
+      }
+    } catch (error) {
+      console.error('Failed to delete gym:', error);
+      showNotification('error', 'Failed to delete gym');
+    }
+  };
+
+  // Handle suspend/activate gym
+  const handleToggleGymStatus = async (gymId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+
+    try {
+      const response = await apiService.updateGym(gymId, { status: newStatus });
+      if (response.success) {
+        setGyms(gyms.map(gym =>
+          gym.id === gymId ? { ...gym, status: newStatus as Gym['status'] } : gym
+        ));
+        showNotification('success', `Gym ${newStatus === 'active' ? 'activated' : 'suspended'} successfully`);
+      } else {
+        showNotification('error', response.message || 'Failed to update gym status');
+      }
+    } catch (error) {
+      console.error('Failed to update gym status:', error);
+      showNotification('error', 'Failed to update gym status');
+    }
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    loadGyms(page);
+  };
 
   const filteredGyms = gyms.filter(gym => {
     const matchesSearch = gym.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -138,37 +257,7 @@ const GymsManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteGym = (gymId: string) => {
-    setGyms(gyms.filter(gym => gym.id !== gymId));
-    setNotification({
-      type: 'success',
-      message: 'Gimnasio eliminado correctamente'
-    });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleSuspendGym = (gymId: string) => {
-    setGyms(gyms.map(gym =>
-      gym.id === gymId ? { ...gym, status: 'suspended' } : gym
-    ));
-    setNotification({
-      type: 'success',
-      message: 'Gimnasio suspendido correctamente'
-    });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleActivateGym = (gymId: string) => {
-    setGyms(gyms.map(gym =>
-      gym.id === gymId ? { ...gym, status: 'active' } : gym
-    ));
-    setNotification({
-      type: 'success',
-      message: 'Gimnasio activado correctamente'
-    });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
+  
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -369,24 +458,25 @@ const GymsManagement: React.FC = () => {
                       <button className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
                         <Edit className="w-4 h-4" />
                       </button>
-                      {gym.status === 'active' ? (
-                        <button
-                          onClick={() => handleSuspendGym(gym.id)}
-                          className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
-                        >
+                      <button
+                        onClick={() => handleToggleGymStatus(gym.id, gym.status)}
+                        className={`${
+                          gym.status === 'active'
+                            ? 'text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300'
+                            : 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'
+                        }`}
+                        title={gym.status === 'active' ? 'Suspend gym' : 'Activate gym'}
+                      >
+                        {gym.status === 'active' ? (
                           <AlertTriangle className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleActivateGym(gym.id)}
-                          className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                        >
+                        ) : (
                           <CheckCircle className="w-4 h-4" />
-                        </button>
-                      )}
+                        )}
+                      </button>
                       <button
                         onClick={() => handleDeleteGym(gym.id)}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                        title="Delete gym"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

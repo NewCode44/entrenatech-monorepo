@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Target, User, Activity, AlertCircle } from 'lucide-react';
 import { NutritionAI, NutritionProfile } from '../services/ai/nutritionAI';
+import apiService from '../services/api';
 
 interface AINutritionistGeneratorProps {
   onClose: () => void;
@@ -58,12 +59,43 @@ const AINutritionistGenerator: React.FC<AINutritionistGeneratorProps> = ({ onClo
   const handleGenerate = async () => {
     setGenerating(true);
 
-    // Simulación de generación con IA
-    setTimeout(() => {
+    try {
+      // Map form data to API format
+      const apiProfile = {
+        goals: [formData.goal],
+        dietaryRestrictions: formData.dietaryRestrictions || [],
+        allergies: formData.allergies || [],
+        weight: formData.weight,
+        height: formData.height,
+        age: formData.age,
+        gender: formData.gender,
+        activityLevel: formData.activityLevel,
+      };
+
+      // Call backend API
+      const response = await apiService.generateNutritionPlan(apiProfile);
+
+      if (response.success && response.data) {
+        // Combine form data with AI-generated plan
+        onGenerate({
+          ...formData,
+          aiGeneratedPlan: response.data
+        });
+        onClose();
+      } else {
+        console.error('AI generation failed:', response.message);
+        // Fallback to mock data
+        onGenerate(formData);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error calling AI API:', error);
+      // Fallback to mock data
       onGenerate(formData);
-      setGenerating(false);
       onClose();
-    }, 2000);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const calculateBMI = () => {

@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Ramiro/Desktop/modulos de servicios tu portal te conecta/entrenatech/backend/**)",
+      "Bash(copy:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(psql:*)",
+      "Bash(ssh:*)",
+      "Bash(powershell:*)",
+      "Bash(dir:*)",
+      "Bash(start-with-tunnel.bat:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd:*)",
+      "Read(//c/Users/Ramiro/Desktop/modulos de servicios tu portal te conecta/entrenatech/**)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

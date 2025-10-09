@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Target, Zap, Calendar } from 'lucide-react';
+import apiService from '../services/api';
 
 interface AIRoutineGeneratorProps {
   onClose: () => void;
@@ -50,11 +51,53 @@ const AIRoutineGenerator: React.FC<AIRoutineGeneratorProps> = ({ onClose, onGene
     return [...array, item];
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setGenerating(true);
 
-    // Simulación de generación con IA
-    setTimeout(() => {
+    try {
+      // Map form data to API format
+      const apiProfile = {
+        fitnessLevel: formData.level,
+        goals: [formData.goal],
+        availableDays: generateAvailableDays(),
+        sessionDuration: formData.sessionDuration,
+        equipment: formData.equipment || [],
+        injuries: formData.injuries || [],
+        preferences: formData.preferences || []
+      };
+
+      // Call backend API
+      const response = await apiService.generateWorkoutPlan(apiProfile);
+
+      if (response.success && response.data) {
+        // Transform API response to expected format
+        const generatedRoutine = {
+          id: `ai-routine-${Date.now()}`,
+          name: response.data.name || `Rutina AI: ${goals.find(g => g.id === formData.goal)?.label}`,
+          description: response.data.description || `Generada con IA para ${formData.level} - ${formData.daysPerWeek} días/semana`,
+          isAIGenerated: true,
+          exercises: response.data.weeks?.[0]?.days?.flatMap((day: any) => day.exercises) || generateExercises(),
+          aiGeneratedPlan: response.data
+        };
+
+        onGenerate(generatedRoutine);
+        onClose();
+      } else {
+        console.error('AI generation failed:', response.message);
+        // Fallback to mock data
+        const generatedRoutine = {
+          id: `ai-routine-${Date.now()}`,
+          name: `Rutina AI: ${goals.find(g => g.id === formData.goal)?.label}`,
+          description: `Generada con IA para ${formData.level} - ${formData.daysPerWeek} días/semana`,
+          isAIGenerated: true,
+          exercises: generateExercises()
+        };
+        onGenerate(generatedRoutine);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error calling AI API:', error);
+      // Fallback to mock data
       const generatedRoutine = {
         id: `ai-routine-${Date.now()}`,
         name: `Rutina AI: ${goals.find(g => g.id === formData.goal)?.label}`,
@@ -62,11 +105,25 @@ const AIRoutineGenerator: React.FC<AIRoutineGeneratorProps> = ({ onClose, onGene
         isAIGenerated: true,
         exercises: generateExercises()
       };
-
-      setGenerating(false);
       onGenerate(generatedRoutine);
       onClose();
-    }, 2500);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Helper function to generate available days array
+  const generateAvailableDays = () => {
+    const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const selectedDays = [];
+    const daysPerWeek = formData.daysPerWeek;
+
+    // Simple logic to select days (can be enhanced with user preference)
+    for (let i = 0; i < daysPerWeek && i < allDays.length; i++) {
+      selectedDays.push(allDays[i]);
+    }
+
+    return selectedDays;
   };
 
   const generateExercises = () => {

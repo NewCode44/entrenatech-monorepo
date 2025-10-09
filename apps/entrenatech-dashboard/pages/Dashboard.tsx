@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Card from '@/ui/Card';
 import AttendanceChart from '../components/dashboard/AttendanceChart';
+import MikrotikMonitor from '../components/MikrotikMonitor';
 import { DASHBOARD_STATS, QUICK_ACTIONS } from '../constants';
 import Icon from '@/ui/Icon';
 import { Page } from '@/types';
@@ -99,6 +100,10 @@ const Dashboard: React.FC<DashboardProps> = ({ setCurrentPage }) => {
                 <Card>
                     <h3 className="text-xl font-bold mb-4 text-white">Check-ins de la Semana</h3>
                     <AttendanceChart />
+                </Card>
+                <Card>
+                    <h3 className="text-xl font-bold mb-4 text-white">Network Monitor</h3>
+                    <MikrotikMonitor />
                 </Card>
             </div>
             <div className="lg:col-span-2">

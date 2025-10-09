@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Building2,
   Users,
@@ -12,8 +12,10 @@ import {
   WifiOff,
   UserPlus,
   CreditCard,
-  Server
+  Server,
+  RefreshCw
 } from 'lucide-react';
+import { apiService } from '@/services/api';
 
 interface DashboardStats {
   totalGyms: number;
@@ -109,9 +111,81 @@ const mockTopGyms: TopGym[] = [
 ];
 
 const DashboardSuperAdmin: React.FC = () => {
-  const stats = mockStats;
-  const recentActivity = mockRecentActivity;
-  const topGyms = mockTopGyms;
+  const [stats, setStats] = useState<DashboardStats>(mockStats);
+  const [recentActivity, setRecentActivity] = useState(mockRecentActivity);
+  const [topGyms, setTopGyms] = useState(mockTopGyms);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load dashboard data
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load stats
+      const statsResponse = await apiService.getDashboardStats();
+      if (statsResponse.success && statsResponse.data) {
+        setStats(statsResponse.data);
+      }
+
+      // Load recent activity
+      const activityResponse = await apiService.getRecentActivity(10);
+      if (activityResponse.success && activityResponse.data) {
+        // Transform data to match expected format
+        const transformedActivity = activityResponse.data.slice(0, 4).map((activity: any) => ({
+          id: activity.id,
+          type: activity.action.replace(/_/g, '_'),
+          message: `${activity.user_name} ${activity.action.replace(/_/g, ' ')}`,
+          timestamp: formatTimestamp(activity.created_at),
+          status: activity.action.includes('delete') ? 'error' :
+                  activity.action.includes('suspend') ? 'warning' : 'success'
+        }));
+        setRecentActivity(transformedActivity);
+      }
+
+      // Load top gyms (this would need a new endpoint or use the gyms endpoint with sorting)
+      const gymsResponse = await apiService.getGyms({ limit: 10, sortBy: 'total_revenue', sortOrder: 'DESC' });
+      if (gymsResponse.success && gymsResponse.data) {
+        const transformedGyms = gymsResponse.data.slice(0, 3).map((gym: any) => ({
+          id: gym.id,
+          name: gym.name,
+          members: gym.active_members || 0,
+          revenue: gym.total_revenue || 0,
+          growth: Math.floor(Math.random() * 30) - 5 // TODO: Calculate real growth
+        }));
+        setTopGyms(transformedGyms);
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Format timestamp
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
+    return `${Math.floor(diffInMinutes / 1440)} days ago`;
+  };
+
+  // Load data on mount
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const getSystemHealthColor = (health: DashboardStats['systemHealth']) => {
     switch (health) {
@@ -173,9 +247,24 @@ const DashboardSuperAdmin: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard SuperAdmin</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Vista general de toda la plataforma EntrenaTech</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            {loading ? 'Cargando datos...' : 'Vista general de toda la plataforma EntrenaTech'}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          {error && (
+            <span className="text-red-600 text-sm">
+              Error al cargar datos
+            </span>
+          )}
+          <button
+            onClick={loadDashboardData}
+            disabled={loading}
+            className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Actualizar
+          </button>
           <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getSystemHealthColor(stats.systemHealth)}`}>
             <Activity className="w-4 h-4 mr-2" />
             {getSystemHealthText(stats.systemHealth)}
@@ -254,7 +343,7 @@ const DashboardSuperAdmin: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
         {/* Recent Activity */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Actividad Reciente</h2>
@@ -329,7 +418,7 @@ const DashboardSuperAdmin: React.FC = () => {
       </div>
 
       {/* Top Gyms */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 mt-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Gimnasios Top</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
