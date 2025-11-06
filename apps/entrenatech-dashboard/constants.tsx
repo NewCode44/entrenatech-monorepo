@@ -9,6 +9,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
   { icon: 'Dumbbell', label: 'Rutinas'},
   { icon: 'Plus', label: 'Creador de Rutinas'},
   { icon: 'ShoppingBag', label: 'Tienda'},
+  { icon: 'Apple', label: 'Servicios de Nutrición'},
   { icon: 'Radio', label: 'Clases en Vivo'},
   { icon: 'Layout', label: 'Contenido Portal'},
   { icon: 'BarChart', label: 'Analíticas' },

@@ -1,0 +1,56 @@
+# This file specifies files that are *not* uploaded to Google Cloud
+# using gcloud. It follows the same syntax as .gitignore, with the addition of
+# "#!include" directives (which insert the entries of the given .gitignore-style
+# file at that point).
+#
+# For more information, run:
+#   $ gcloud topic gcloudignore
+#
+.gcloudignore
+# If you would like to upload your .git directory, .gitignore file or files
+# from your .gitignore file, remove the corresponding line
+# below:
+.git
+.gitignore
+
+# Node.js dependencies:
+node_modules/
+
+# Development and build files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and OS files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Source files (keep built apps and public)
+apps/*/src
+apps/*/public
+apps/*/node_modules
+apps/*/vite.config.ts
+apps/*/tsconfig.json
+apps/*/tailwind.config.js
+apps/*/postcss.config.js
+apps/*/package-lock.json
+
+# Firebase files (we'll deploy to App Engine instead)
+firebase.json
+.firebaserc
+
+# Keep essential files
+!public/
+!server.js
+!package.json
+!.npmrc
+!app.yaml

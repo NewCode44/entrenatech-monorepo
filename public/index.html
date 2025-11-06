@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EntrenaTech - Plataforma de Gimnasios Inteligentes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 600px;
+        }
+        h1 { color: #333; margin-bottom: 1rem; font-size: 2.5rem; }
+        .subtitle { color: #666; margin-bottom: 2rem; font-size: 1.2rem; }
+        .portal-demo {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: transform 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .portal-preview {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            background: white;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .feature {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .feature h3 { color: #667eea; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏋️ EntrenaTech</h1>
+        <p class="subtitle">Plataforma de Gimnasios Inteligentes con IA Híbrida</p>
+
+        <div class="features">
+            <div class="feature">
+                <h3>🤖 IA Optimizada</h3>
+                <p>Sistema híbrido con routing inteligente de costos y APIs chinas+premium</p>
+            </div>
+            <div class="feature">
+                <h3>📱 WiFi Portal</h3>
+                <p>Portal cautivo integrado con MikroTik para control de acceso</p>
+            </div>
+            <div class="feature">
+                <h3>💰 B2B2C Model</h3>
+                <p>Gimnasios pagan $2,500-3,000 MXN/mes, miembros acceden gratis</p>
+            </div>
+            <div class="feature">
+                <h3>🎯 Gamificación</h3>
+                <p>Sistema completo de logros, desafíos y leaderboard con IA</p>
+            </div>
+        </div>
+
+        <div class="portal-demo">
+            <h2>📶 Portal Cautivo WiFi Demo</h2>
+            <p>Simula el portal que verían los usuarios al conectarse al WiFi del gym</p>
+
+            <div class="portal-preview">
+                <button class="btn" onclick="showCaptivePortal()">
+                    Ver Portal WiFi Demo
+                </button>
+                <button class="btn" onclick="showAdminPanel()">
+                    Panel Admin WiFi
+                </button>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <h3>🚀 Accesos Rápidos:</h3>
+            <div style="margin-top: 1rem;">
+                <a href="/member" class="btn">Portal Miembros</a>
+                <a href="/gym" class="btn">Dashboard Gym</a>
+                <a href="/login" class="btn">Login App</a>
+                <a href="/admin" class="btn">SuperAdmin</a>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e1e5e9;">
+            <h3>🏷️ White Label - Personalización de Marca</h3>
+            <p><strong>¿App por gym?</strong> ¡No! Implementamos White Label dinámico:</p>
+            <ul style="text-align: left; margin: 1rem 0;">
+                <li>✅ Una sola app con marca dinámica</li>
+                <li>✅ Logo y colores personalizados por gym</li>
+                <li>✅ Subdominio personalizado (gym.entrenatech.app)</li>
+                <li>✅ PWA instalable con marca del gym</li>
+                <li>✅ Configuración vía panel administrativo</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function showCaptivePortal() {
+            // Simular MAC y IP para demo
+            const mac = 'AA:BB:CC:DD:EE:FF';
+            const ip = '192.168.88.100';
+
+            // Abrir portal cautivo en nueva ventana - URL de producción Firebase
+            const portalWindow = window.open(
+                `https://us-central1-entrenapp-2025.cloudfunctions.net/wifiPortal?mac=${mac}&ip=${ip}`,
+                'entrenatech-wifi',
+                'width=400,height=600,scrollbars=yes'
+            );
+
+            if (!portalWindow) {
+                alert('Permite las ventanas emergentes para ver el demo del portal WiFi');
+            }
+        }
+
+        function showAdminPanel() {
+            window.open('/admin/wifi-stats', '_blank');
+        }
+
+        // Auto-actualizar info del sistema
+        setInterval(() => {
+            console.log('🚀 EntrenaTech Platform Status: Running');
+            console.log('📊 Active users: Loading...');
+            console.log('💰 AI Cost: Tracking...');
+        }, 30000);
+    </script>
+</body>
+</html>

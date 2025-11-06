@@ -1,7 +1,7 @@
 export type Page =
   | 'Dashboard' | 'Miembros' | 'Clases' | 'Entrenadores'
   | 'Rutinas' | 'Creador de Rutinas'
-  | 'Tienda' | 'Clases en Vivo' | 'Contenido Portal'
+  | 'Tienda' | 'Servicios de Nutrición' | 'Clases en Vivo' | 'Contenido Portal'
   | 'Analíticas' | 'Configuración';
 
 export type IconName =
@@ -14,7 +14,7 @@ export type IconName =
   | 'UserCog' | 'UserX' | 'FileText' | 'UserCheck' | 'IdCard' | 'Camera' | 'UploadCloud' | 'Phone'
   | 'Shapes' | 'UsersRound' | 'BarChartHorizontal' | 'Sparkles' | 'ClipboardList'
   | 'FileJson' | 'FileUp' | 'LineChart' | 'Coins' | 'CalendarCheck' | 'PieChart'
-  | 'ShoppingBag' | 'Radio' | 'Layout' | 'Package' | 'Archive' | 'AlertTriangle' | 'MessageSquare' | 'Trash2';
+  | 'ShoppingBag' | 'Apple' | 'Radio' | 'Layout' | 'Package' | 'Archive' | 'AlertTriangle' | 'MessageSquare' | 'Trash2';
 
 export interface NavItem {
   icon: IconName;

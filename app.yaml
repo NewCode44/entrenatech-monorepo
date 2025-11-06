@@ -1,0 +1,63 @@
+# EntrenaTech All Dashboards - Google Cloud App Engine Production
+runtime: nodejs20
+instance_class: F4_1G
+
+env_variables:
+  NODE_ENV: 'production'
+  PORT: '8080'
+  GOOGLE_CLOUD_PROJECT: 'entrenatech-prod-2024'
+  APP_NAME: 'entrenatech-all-dashboards'
+  APP_VERSION: '2.0.0'
+  API_BASE_URL: 'https://api.entrenatech.com'
+  ENVIRONMENT: 'production'
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 20
+  min_idle_instances: 1
+  max_idle_instances: 3
+  min_pending_latency: automatic
+  max_pending_latency: 0.5s
+  target_cpu_utilization: 0.65
+  target_throughput_utilization: 0.75
+
+# Network configuration
+network:
+  session_affinity: true
+  forwarded_ports: [80, 443]
+
+# Resource limits
+resources:
+  cpu: 1
+  memory_gb: 1.0
+  disk_size_gb: 20
+  volumes:
+    - name: tmpfs
+      volume_type: tmpfs
+      size_gb: 0.5
+
+# Health check
+readiness_check:
+  path: "/health"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+  app_start_timeout_sec: 300
+
+liveness_check:
+  path: "/health"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+
+# Performance and security
+instance_lifecycle: auto
+service_account: 'entrenatech-prod@entrenatech-prod-2024.iam.gserviceaccount.com'
+
+# Deployment settings
+deploy:
+  timeout: "1200s"
+
+# Note: App Engine automatically starts with "npm start" or "node server.js"

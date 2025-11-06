@@ -111,7 +111,7 @@ export class AuthService {
         return '/admin';
       case 'gym_owner':
       case 'trainer':
-        return '/owner';
+        return '/gym';
       case 'member':
         return '/member';
       default:

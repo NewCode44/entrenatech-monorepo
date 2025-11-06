@@ -9,7 +9,9 @@ const router = createBrowserRouter([
     path: '/',
     element: <LoginPage />,
   },
-])
+], {
+  basename: '/login'
+})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

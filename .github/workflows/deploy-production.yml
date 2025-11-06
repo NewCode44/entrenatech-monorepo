@@ -1,0 +1,157 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'server.js'
+      - 'firebase.json'
+      - 'app.yaml'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  GOOGLE_CLOUD_PROJECT: 'entrenatech-prod-2024'
+  FIREBASE_PROJECT: 'entrenapp-2025'
+
+jobs:
+  test:
+    name: Test and Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run type check
+      run: npm run type-check
+
+    - name: Run linter
+      run: npm run lint
+
+    - name: Build for production
+      run: npm run build:production
+      env:
+        NODE_ENV: production
+
+    - name: Analyze bundle size
+      run: npm run analyze || true
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-files
+        path: |
+          public/
+          server.js
+          package.json
+          package-lock.json
+          app.yaml
+          firebase.json
+        retention-days: 1
+
+  deploy-firebase:
+    name: Deploy to Firebase Hosting
+    runs-on: ubuntu-latest
+    needs: test
+    environment: production
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-files
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+
+    - name: Deploy to Firebase Hosting
+      run: firebase deploy --only hosting --project ${{ env.FIREBASE_PROJECT }}
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  deploy-app-engine:
+    name: Deploy to Google Cloud App Engine
+    runs-on: ubuntu-latest
+    needs: test
+    environment: production
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-files
+
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker to use the gcloud credential helper
+      run: gcloud auth configure-docker
+
+    - name: Deploy to App Engine
+      run: gcloud app deploy --project=${{ env.GOOGLE_CLOUD_PROJECT }} --promote --quiet
+
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    needs: [deploy-firebase, deploy-app-engine]
+    environment: production
+    steps:
+    - name: Health Check Firebase
+      run: |
+        sleep 30
+        curl -f https://${{ env.FIREBASE_PROJECT }}.web.app/health || exit 1
+        curl -f https://${{ env.FIREBASE_PROJECT }}.web.app/member || exit 1
+        curl -f https://${{ env.FIREBASE_PROJECT }}.web.app/gym || exit 1
+
+    - name: Health Check App Engine
+      run: |
+        sleep 30
+        curl -f https://${{ env.GOOGLE_CLOUD_PROJECT }}.uc.r.appspot.com/health || exit 1
+
+  notify:
+    name: Notify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-firebase, deploy-app-engine, health-check]
+    if: always()
+    steps:
+    - name: Notify Success
+      if: needs.deploy-firebase.result == 'success' && needs.deploy-app-engine.result == 'success' && needs.health-check.result == 'success'
+      run: |
+        echo "✅ Deployment successful!"
+        echo "🌐 Firebase Hosting: https://${{ env.FIREBASE_PROJECT }}.web.app"
+        echo "🚀 App Engine: https://${{ env.GOOGLE_CLOUD_PROJECT }}.uc.r.appspot.com"
+
+    - name: Notify Failure
+      if: needs.deploy-firebase.result == 'failure' || needs.deploy-app-engine.result == 'failure' || needs.health-check.result == 'failure'
+      run: |
+        echo "❌ Deployment failed!"
+        exit 1

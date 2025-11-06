@@ -21,7 +21,15 @@
       "Bash(git commit:*)",
       "Bash(scp:*)",
       "Bash(npm run build:*)",
-      "Bash(rsync:*)"
+      "Bash(rsync:*)",
+      "Bash(npm start)",
+      "Bash(npm run build:all:*)",
+      "Bash(DEPLOYMENT.md)",
+      "Bash(npm run build:production:*)",
+      "Bash(firebase --version:*)",
+      "Bash(firebase:*)",
+      "Bash(echo:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

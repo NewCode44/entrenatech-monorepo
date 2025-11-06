@@ -12,6 +12,7 @@ import Store from './pages/Store';
 import LiveStreaming from './pages/LiveStreaming';
 import PortalContent from './pages/PortalContent';
 import Settings from './pages/Settings';
+import NutritionServices from './pages/NutritionServices';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { Page, Routine } from '@/types/index';
 
@@ -46,6 +47,8 @@ const App: React.FC = () => {
         return <PortalContent />;
       case 'Analíticas':
         return <Analytics />;
+      case 'Servicios de Nutrición':
+        return <NutritionServices />;
       case 'Configuración':
         return <Settings />;
       default:

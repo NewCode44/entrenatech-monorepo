@@ -1,0 +1,127 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/src/**",
+      "**/apps/*/src/**",
+      "**/libs/*/src/**",
+      "package*.json",
+      "tsconfig.json",
+      "vite.config.*",
+      "tailwind.config.*",
+      "postcss.config.*",
+      "eslint.config.*",
+      ".eslintrc*"
+    ],
+    "frameworksBackend": {
+      "region": "us-central1",
+      "runtime": "nodejs20"
+    },
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|ico|woff|woff2)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(html)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=0, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "X-XSS-Protection",
+            "value": "1; mode=block"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          }
+        ]
+      }
+    ],
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/gym",
+        "type": 302
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/wifi/**",
+        "function": "wifiPortal",
+        "region": "us-central1"
+      },
+      {
+        "source": "/api/**",
+        "function": "api",
+        "region": "us-central1"
+      },
+      {
+        "source": "/gym/**",
+        "destination": "/gym/index.html"
+      },
+      {
+        "source": "/owner/**",
+        "destination": "/gym/index.html"
+      },
+      {
+        "source": "/member/**",
+        "destination": "/member/index.html"
+      },
+      {
+        "source": "/admin/**",
+        "destination": "/admin/index.html"
+      },
+      {
+        "source": "/login/**",
+        "destination": "/login/index.html"
+      }
+    ]
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20",
+    "region": "us-central1"
+  },
+  "emulators": {
+    "hosting": {
+      "port": 5000
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  }
+}

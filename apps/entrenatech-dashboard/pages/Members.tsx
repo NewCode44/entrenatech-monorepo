@@ -1,11 +1,10 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Member } from '@/types';
 import { MEMBERS_DATA } from '../constants';
 import Icon from '@/ui/Icon';
 import StatsCard from '@/ui/StatsCard';
 import AddMemberModal from '../components/members/AddMemberModal';
-import NutritionCalculator from '../components/NutritionCalculator';
 
 const statusStyles: { [key in Member['status']]: string } = {
     active: 'bg-green-500/20 text-green-400',
@@ -26,7 +25,7 @@ const Members: React.FC = () => {
     const [planFilter, setPlanFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [isAddModalOpen, setAddModalOpen] = useState(false);
-    const [isNutritionCalcOpen, setNutritionCalcOpen] = useState(false);
+    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const itemsPerPage = 8;
 
     const handleAddNewMember = (newMemberData: Omit<Member, 'id' | 'joinDate'>) => {
@@ -39,6 +38,61 @@ const Members: React.FC = () => {
         setMembers(prevMembers => [newMember, ...prevMembers]);
         setAddModalOpen(false);
     };
+
+    const handleViewMember = (memberId: string) => {
+        console.log('Ver miembro:', memberId);
+        // TODO: Abrir modal de detalles del miembro
+        setActiveDropdown(null);
+    };
+
+    const handleEditMember = (memberId: string) => {
+        console.log('Editar miembro:', memberId);
+        // TODO: Abrir modal de edición del miembro
+        setActiveDropdown(null);
+    };
+
+    const handleSendMessage = (memberId: string) => {
+        console.log('Enviar mensaje a miembro:', memberId);
+        // TODO: Abrir modal de envío de mensaje
+        setActiveDropdown(null);
+    };
+
+    const handleSuspendMember = (memberId: string) => {
+        setMembers(prevMembers =>
+            prevMembers.map(member =>
+                member.id === memberId
+                    ? { ...member, status: 'suspended' as const }
+                    : member
+            )
+        );
+        setActiveDropdown(null);
+    };
+
+    const handleDeleteMember = (memberId: string) => {
+        if (window.confirm('¿Estás seguro de que quieres eliminar este miembro?')) {
+            setMembers(prevMembers => prevMembers.filter(member => member.id !== memberId));
+            setActiveDropdown(null);
+        }
+    };
+
+    const toggleDropdown = (memberId: string) => {
+        setActiveDropdown(activeDropdown === memberId ? null : memberId);
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (activeDropdown) {
+                const target = event.target as HTMLElement;
+                if (!target.closest('.dropdown-menu')) {
+                    setActiveDropdown(null);
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [activeDropdown]);
 
     const filteredMembers = useMemo(() => {
         return members
@@ -72,13 +126,6 @@ const Members: React.FC = () => {
                         </p>
                     </div>
                     <div className="flex items-center gap-2 mt-4 md:mt-0">
-                        <button
-                            onClick={() => setNutritionCalcOpen(true)}
-                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-                        >
-                            <Icon name="Apple" className="w-4 h-4" />
-                            Plan Nutricional IA
-                        </button>
                         <button onClick={() => setAddModalOpen(true)} className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold py-2 px-4 rounded-lg transition-colors">
                             <Icon name="UserPlus" className="w-4 h-4" />
                             Añadir Miembro
@@ -165,10 +212,69 @@ const Members: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4">{member.joinDate}</td>
                                         <td className="px-6 py-4 text-right">
-                                        <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg">
+                                        <div className="relative dropdown-menu">
+                                            <button
+                                                onClick={() => toggleDropdown(member.id)}
+                                                className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
+                                            >
                                                 <Icon name="MoreVertical" className="w-5 h-5" />
                                             </button>
-                                        </td>
+
+                                            {/* Dropdown Menu */}
+                                            {activeDropdown === member.id && (
+                                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+                                                    <div className="py-1">
+                                                        <button
+                                                            onClick={() => handleViewMember(member.id)}
+                                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
+                                                        >
+                                                            <Icon name="Eye" className="w-4 h-4" />
+                                                            Ver Detalles
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEditMember(member.id)}
+                                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
+                                                        >
+                                                            <Icon name="Edit" className="w-4 h-4" />
+                                                            Editar
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleSendMessage(member.id)}
+                                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
+                                                        >
+                                                            <Icon name="Mail" className="w-4 h-4" />
+                                                            Enviar Mensaje
+                                                        </button>
+                                                        {member.status !== 'suspended' ? (
+                                                            <button
+                                                                onClick={() => handleSuspendMember(member.id)}
+                                                                className="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700 hover:text-yellow-300 flex items-center gap-2"
+                                                            >
+                                                                <Icon name="AlertCircle" className="w-4 h-4" />
+                                                                Suspender
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleSuspendMember(member.id)}
+                                                                className="w-full text-left px-4 py-2 text-sm text-green-400 hover:bg-gray-700 hover:text-green-300 flex items-center gap-2"
+                                                            >
+                                                                <Icon name="CheckCircle" className="w-4 h-4" />
+                                                                Reactivar
+                                                            </button>
+                                                        )}
+                                                        <hr className="my-1 border-gray-700" />
+                                                        <button
+                                                            onClick={() => handleDeleteMember(member.id)}
+                                                            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 flex items-center gap-2"
+                                                        >
+                                                            <Icon name="Trash2" className="w-4 h-4" />
+                                                            Eliminar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -203,10 +309,6 @@ const Members: React.FC = () => {
                 isOpen={isAddModalOpen}
                 onClose={() => setAddModalOpen(false)}
                 onAddMember={handleAddNewMember}
-            />
-            <NutritionCalculator
-                isOpen={isNutritionCalcOpen}
-                onClose={() => setNutritionCalcOpen(false)}
             />
         </>
     );

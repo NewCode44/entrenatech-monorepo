@@ -105,100 +105,106 @@ export class NutritionAI {
   }
 
   /**
-   * Genera plan de comidas completo con IA
+   * Genera plan de comidas completo con IA híbrida optimizada en costos
    */
   static async generateMealPlan(
     profile: NutritionProfile,
     macros: MacroTargets,
     days: number = 7
   ): Promise<MealPlan> {
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    try {
+      // Importar el servicio IA híbrido
+      const { aiService } = await import('../../../../../libs/ai/ai-service');
+      const { costMonitor } = await import('../../../../../libs/ai/cost-monitor');
 
-    // Ejemplo: Plan para un día
-    const meals: Meal[] = [
-      {
-        id: 'breakfast',
-        name: 'Desayuno',
-        time: '08:00',
-        foods: [
-          { name: 'Avena', amount: '80g', calories: 304, protein: 10, carbs: 54, fats: 6 },
-          { name: 'Plátano', amount: '1 mediano', calories: 105, protein: 1, carbs: 27, fats: 0 },
-          { name: 'Mantequilla de maní', amount: '15g', calories: 94, protein: 4, carbs: 3, fats: 8 },
-          { name: 'Proteína whey', amount: '30g', calories: 120, protein: 24, carbs: 3, fats: 2 }
-        ],
-        macros: { calories: 623, protein: 39, carbs: 87, fats: 16 },
-        recipe: '1. Cocina la avena con agua\n2. Añade el plátano en rodajas\n3. Mezcla la mantequilla de maní\n4. Prepara el batido de proteína aparte'
-      },
-      {
-        id: 'lunch',
-        name: 'Almuerzo',
-        time: '13:00',
-        foods: [
-          { name: 'Pechuga de pollo', amount: '200g', calories: 330, protein: 62, carbs: 0, fats: 7 },
-          { name: 'Arroz integral', amount: '150g cocido', calories: 195, protein: 4, carbs: 41, fats: 1 },
-          { name: 'Brócoli', amount: '200g', calories: 68, protein: 6, carbs: 14, fats: 0 },
-          { name: 'Aceite de oliva', amount: '10g', calories: 90, protein: 0, carbs: 0, fats: 10 }
-        ],
-        macros: { calories: 683, protein: 72, carbs: 55, fats: 18 }
-      },
-      {
-        id: 'snack',
-        name: 'Merienda',
-        time: '16:30',
-        foods: [
-          { name: 'Yogurt griego', amount: '170g', calories: 100, protein: 17, carbs: 6, fats: 0 },
-          { name: 'Almendras', amount: '28g', calories: 164, protein: 6, carbs: 6, fats: 14 },
-          { name: 'Manzana', amount: '1 mediana', calories: 95, protein: 0, carbs: 25, fats: 0 }
-        ],
-        macros: { calories: 359, protein: 23, carbs: 37, fats: 14 }
-      },
-      {
-        id: 'dinner',
-        name: 'Cena',
-        time: '20:00',
-        foods: [
-          { name: 'Salmón', amount: '180g', calories: 367, protein: 40, carbs: 0, fats: 22 },
-          { name: 'Camote', amount: '200g', calories: 180, protein: 4, carbs: 41, fats: 0 },
-          { name: 'Espárragos', amount: '150g', calories: 30, protein: 3, carbs: 6, fats: 0 }
-        ],
-        macros: { calories: 577, protein: 47, carbs: 47, fats: 22 }
-      }
-    ];
+      // Crear prompt para generación de plan nutricional
+      const systemPrompt = `Eres un nutricionista certificado experto en fitness. Genera un plan de comidas personalizado que sea:
+- Práctico y fácil de preparar
+- Económicamente accesible
+- Culturalmente apropiado para México
+- Cumpla exactamente con los macros objetivo
+- Variedad de sabores y texturas
+- Tiempos de preparación realistas`;
 
-    const totalMacros = meals.reduce(
-      (acc, meal) => ({
-        calories: acc.calories + meal.macros.calories,
-        protein: acc.protein + meal.macros.protein,
-        carbs: acc.carbs + meal.macros.carbs,
-        fats: acc.fats + meal.macros.fats
-      }),
-      { calories: 0, protein: 0, carbs: 0, fats: 0 }
-    );
+      const userPrompt = `Crea un plan de comidas para ${days} días con este perfil:
+- Perfil: ${JSON.stringify(profile, null, 2)}
+- Macros objetivo: ${JSON.stringify(macros, null, 2)}
 
-    return {
-      id: 'plan-1',
-      name: `Plan ${profile.goal === 'lose_fat' ? 'Pérdida de Grasa' : profile.goal === 'gain_muscle' ? 'Ganancia Muscular' : 'Mantenimiento'}`,
-      meals,
-      totalMacros,
-      shoppingList: [
-        'Avena (560g)',
-        'Plátanos (7)',
-        'Mantequilla de maní (1 frasco)',
-        'Proteína whey (1 contenedor)',
-        'Pechuga de pollo (1.4kg)',
-        'Arroz integral (1kg)',
-        'Brócoli fresco (1.4kg)',
-        'Aceite de oliva extra virgen',
-        'Yogurt griego natural (1.2L)',
-        'Almendras (200g)',
-        'Manzanas (7)',
-        'Salmón fresco (1.2kg)',
-        'Camotes (1.4kg)',
-        'Espárragos frescos (1kg)'
+Restricciones adicionales:
+${profile.dietaryRestrictions?.length ? `- Restricciones: ${profile.dietaryRestrictions.join(', ')}` : ''}
+${profile.allergies?.length ? `- Alergias: ${profile.allergies.join(', ')}` : ''}
+
+Devuelve el plan en formato JSON con esta estructura:
+{
+  "meals": [
+    {
+      "id": "breakfast_day1",
+      "name": "Nombre del desayuno",
+      "time": "08:00",
+      "foods": [
+        {
+          "name": "Alimento",
+          "amount": "Cantidad",
+          "calories": 0,
+          "protein": 0,
+          "carbs": 0,
+          "fats": 0
+        }
       ],
-      prepTime: 45,
-      difficulty: 'medium'
-    };
+      "recipe": "Pasos de preparación"
+    }
+  ],
+  "shoppingList": ["lista de compras"],
+  "prepTime": 45,
+  "difficulty": "easy|medium|hard"
+}`;
+
+      const messages = [
+        { role: 'system' as const, content: systemPrompt },
+        { role: 'user' as const, content: userPrompt }
+      ];
+
+      // Generar plan con IA usando routing de costos
+      const aiResponse = await aiService.nutrition(messages, 'premium');
+
+      // Registrar uso para monitoreo de costos
+      costMonitor.recordAPIUsage(
+        aiResponse.model || 'unknown',
+        aiResponse.tokens?.input || 0,
+        aiResponse.tokens?.output || 0,
+        aiResponse.cost || 0,
+        'nutrition-plan-generation',
+        true
+      );
+
+      // Parsear respuesta de la IA
+      const aiPlan = this.parseAIResponse(aiResponse.content);
+
+      if (aiPlan && aiPlan.meals && aiPlan.meals.length > 0) {
+        // Calcular macros totales del plan generado
+        const totalMacros = this.calculateTotalMacros(aiPlan.meals);
+
+        // Ajustar macros si es necesario para cumplir objetivos
+        const adjustedMeals = this.adjustMacrosToTarget(aiPlan.meals, macros);
+
+        return {
+          id: `plan-${Date.now()}`,
+          name: `Plan ${this.getPlanName(profile.goal)} - IA Personalizado`,
+          meals: adjustedMeals,
+          totalMacros: macros, // Usar macros objetivo como referencia
+          shoppingList: aiPlan.shoppingList || this.generateShoppingList(adjustedMeals),
+          prepTime: aiPlan.prepTime || 45,
+          difficulty: aiPlan.difficulty || 'medium'
+        };
+      }
+
+      // Fallback a plan predefinido si la IA falla
+      return this.getFallbackMealPlan(profile, macros);
+
+    } catch (error) {
+      console.error('Error generando plan nutricional con IA:', error);
+      return this.getFallbackMealPlan(profile, macros);
+    }
   }
 
   /**
@@ -235,7 +241,7 @@ export class NutritionAI {
   }
 
   /**
-   * Genera recetas saludables con IA
+   * Genera recetas saludables con IA híbrida optimizada en costos
    */
   static async generateRecipe(
     targetMacros: { calories: number; protein: number },
@@ -248,34 +254,62 @@ export class NutritionAI {
     macros: { calories: number; protein: number; carbs: number; fats: number };
     prepTime: number;
   }> {
-    await new Promise(resolve => setTimeout(resolve, 600));
+    try {
+      // Importar el servicio IA híbrido
+      const { aiService } = await import('../../../../../libs/ai/ai-service');
 
-    // Ejemplo de receta generada
-    return {
-      name: 'Pollo Teriyaki con Arroz de Coliflor',
-      ingredients: [
-        '300g pechuga de pollo',
-        '300g arroz de coliflor',
-        '2 tbsp salsa teriyaki baja en azúcar',
-        '1 tbsp aceite de sésamo',
-        '100g edamame',
-        'Jengibre y ajo al gusto'
-      ],
-      instructions: [
-        'Corta el pollo en cubos y marina con teriyaki 10 min',
-        'Saltea el pollo en aceite de sésamo 8-10 min',
-        'Cocina el arroz de coliflor al vapor 5 min',
-        'Mezcla todo y añade edamame',
-        'Sirve caliente'
-      ],
-      macros: {
-        calories: 520,
-        protein: 58,
-        carbs: 32,
-        fats: 16
-      },
-      prepTime: 25
-    };
+      const mealTypeMap = {
+        breakfast: 'desayuno',
+        lunch: 'almuerzo',
+        dinner: 'cena',
+        snack: 'merienda'
+      };
+
+      const systemPrompt = `Eres un chef experto en nutrición deportiva. Crea recetas que sean:
+- Deliciosas y fáciles de preparar
+- Económicas y con ingredientes disponibles en México
+- Exactas en los macros objetivo
+- Apropiadas para el tipo de comida solicitado`;
+
+      const userPrompt = `Crea una receta para ${mealTypeMap[mealType]} con estos macros:
+- Calorías: ${targetMacros.calories}
+- Proteína: ${targetMacros.protein}g
+
+Restricciones: ${restrictions.length > 0 ? restrictions.join(', ') : 'Ninguna'}
+
+Devuelve en formato JSON:
+{
+  "name": "Nombre de la receta",
+  "ingredients": ["ingrediente 1", "ingrediente 2"],
+  "instructions": ["paso 1", "paso 2"],
+  "macros": {
+    "calories": 0,
+    "protein": 0,
+    "carbs": 0,
+    "fats": 0
+  },
+  "prepTime": 25
+}`;
+
+      const messages = [
+        { role: 'system' as const, content: systemPrompt },
+        { role: 'user' as const, content: userPrompt }
+      ];
+
+      const aiResponse = await aiService.nutrition(messages, 'premium');
+      const recipe = this.parseRecipeResponse(aiResponse.content);
+
+      if (recipe) {
+        return recipe;
+      }
+
+      // Fallback si la IA falla
+      return this.getFallbackRecipe(targetMacros, mealType);
+
+    } catch (error) {
+      console.error('Error generando receta con IA:', error);
+      return this.getFallbackRecipe(targetMacros, mealType);
+    }
   }
 
   // === MÉTODOS PRIVADOS ===
@@ -326,5 +360,242 @@ export class NutritionAI {
     // 25-30% de calorías totales
     const percentage = profile.goal === 'lose_fat' ? 0.25 : 0.30;
     return (calories * percentage) / 9;
+  }
+
+  // === MÉTODOS AUXILIARES PARA IA ===
+
+  private static parseAIResponse(content: string): any {
+    try {
+      // Intentar parsear como JSON
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parseando respuesta de IA:', error);
+      return null;
+    }
+  }
+
+  private static parseRecipeResponse(content: string): any {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parseando receta de IA:', error);
+      return null;
+    }
+  }
+
+  private static calculateTotalMacros(meals: any[]): {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+  } {
+    return meals.reduce(
+      (acc, meal) => {
+        const mealMacros = meal.foods.reduce(
+          (foodAcc: any, food: any) => ({
+            calories: foodAcc.calories + food.calories,
+            protein: foodAcc.protein + food.protein,
+            carbs: foodAcc.carbs + food.carbs,
+            fats: foodAcc.fats + food.fats
+          }),
+          { calories: 0, protein: 0, carbs: 0, fats: 0 }
+        );
+        return {
+          calories: acc.calories + mealMacros.calories,
+          protein: acc.protein + mealMacros.protein,
+          carbs: acc.carbs + mealMacros.carbs,
+          fats: acc.fats + mealMacros.fats
+        };
+      },
+      { calories: 0, protein: 0, carbs: 0, fats: 0 }
+    );
+  }
+
+  private static adjustMacrosToTarget(meals: any[], targetMacros: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+  }): Meal[] {
+    // Convertir a formato Meal y ajustar cantidades si es necesario
+    return meals.map((meal: any): Meal => ({
+      id: meal.id,
+      name: meal.name,
+      time: meal.time,
+      foods: meal.foods.map((food: any): Food => ({
+        name: food.name,
+        amount: food.amount,
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fats: food.fats
+      })),
+      macros: this.calculateTotalMacros([meal]),
+      recipe: meal.recipe
+    }));
+  }
+
+  private static generateShoppingList(meals: Meal[]): string[] {
+    const ingredients = new Set<string>();
+
+    meals.forEach(meal => {
+      meal.foods.forEach(food => {
+        ingredients.add(`${food.name} (${food.amount})`);
+      });
+    });
+
+    return Array.from(ingredients);
+  }
+
+  private static getPlanName(goal: string): string {
+    const planNames = {
+      lose_fat: 'Pérdida de Grasa',
+      gain_muscle: 'Ganancia Muscular',
+      recomp: 'Recomposición',
+      maintain: 'Mantenimiento'
+    };
+    return planNames[goal] || 'Personalizado';
+  }
+
+  private static getFallbackMealPlan(profile: NutritionProfile, macros: MacroTargets): MealPlan {
+    // Plan predefinido como fallback
+    const meals: Meal[] = [
+      {
+        id: 'breakfast',
+        name: 'Desayuno Energético',
+        time: '08:00',
+        foods: [
+          { name: 'Avena', amount: '80g', calories: 304, protein: 10, carbs: 54, fats: 6 },
+          { name: 'Huevo', amount: '2 unidades', calories: 140, protein: 12, carbs: 2, fats: 10 },
+          { name: 'Plátano', amount: '1 mediano', calories: 105, protein: 1, carbs: 27, fats: 0 }
+        ],
+        macros: { calories: 549, protein: 23, carbs: 83, fats: 16 },
+        recipe: 'Cocina la avena, añade huevos revueltos y plátano en rodajas'
+      },
+      {
+        id: 'lunch',
+        name: 'Almuerzo Balanceado',
+        time: '13:00',
+        foods: [
+          { name: 'Pechuga de pollo', amount: '150g', calories: 248, protein: 46, carbs: 0, fats: 5 },
+          { name: 'Arroz integral', amount: '120g cocido', calories: 156, protein: 3, carbs: 33, fats: 1 },
+          { name: 'Ensalada mixta', amount: '200g', calories: 50, protein: 3, carbs: 10, fats: 0 },
+          { name: 'Aceite de oliva', amount: '10ml', calories: 90, protein: 0, carbs: 0, fats: 10 }
+        ],
+        macros: { calories: 544, protein: 52, carbs: 43, fats: 16 }
+      },
+      {
+        id: 'dinner',
+        name: 'Cena Ligera',
+        time: '20:00',
+        foods: [
+          { name: 'Pescado blanco', amount: '150g', calories: 165, protein: 33, carbs: 0, fats: 3 },
+          { name: 'Vegetales al vapor', amount: '200g', calories: 80, protein: 4, carbs: 16, fats: 0 },
+          { name: 'Papa', amount: '150g', calories: 125, protein: 3, carbs: 28, fats: 0 }
+        ],
+        macros: { calories: 370, protein: 40, carbs: 44, fats: 3 }
+      }
+    ];
+
+    return {
+      id: 'fallback-plan',
+      name: `Plan ${this.getPlanName(profile.goal)} - Predefinido`,
+      meals,
+      totalMacros: macros,
+      shoppingList: [
+        'Avena', 'Huevos', 'Plátanos', 'Pechuga de pollo', 'Arroz integral',
+        'Vegetales frescos', 'Aceite de oliva', 'Pescado blanco', 'Papas'
+      ],
+      prepTime: 30,
+      difficulty: 'easy'
+    };
+  }
+
+  private static getFallbackRecipe(
+    targetMacros: { calories: number; protein: number },
+    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack'
+  ): {
+    name: string;
+    ingredients: string[];
+    instructions: string[];
+    macros: { calories: number; protein: number; carbs: number; fats: number };
+    prepTime: number;
+  } {
+    const recipes = {
+      breakfast: {
+        name: 'Omelette de Proteína',
+        ingredients: [
+          '4 huevos grandes',
+          '50g queso cottage',
+          'Verduras al gusto (espinacas, champiñones)',
+          '10g aceite de oliva'
+        ],
+        instructions: [
+          'Batir los huevos con queso cottage',
+          'Saltear verduras en aceite',
+          'Añadir los huevos y cocinar hasta firmeza'
+        ],
+        macros: { calories: 350, protein: 32, carbs: 8, fats: 20 },
+        prepTime: 15
+      },
+      lunch: {
+        name: 'Pollo a la Parrilla con Ensalada',
+        ingredients: [
+          '180g pechuga de pollo',
+          '200g mix de vegetales',
+          '30ml vinagreta ligera',
+          'Especias al gusto'
+        ],
+        instructions: [
+          'Sazonar y cocinar el pollo a la parrilla',
+          'Mezclar vegetales con vinagreta',
+          'Servir pollo sobre ensalada'
+        ],
+        macros: { calories: 380, protein: 45, carbs: 12, fats: 16 },
+        prepTime: 25
+      },
+      dinner: {
+        name: 'Salmón al Horno',
+        ingredients: [
+          '150g filete de salmón',
+          '200g brócoli',
+          '10g aceite de oliva',
+          'Limón y especias'
+        ],
+        instructions: [
+          'Sazonar salmón y rociar con aceite',
+          'Hornear a 200°C por 15 minutos',
+          'Servir con brócoli al vapor'
+        ],
+        macros: { calories: 420, protein: 38, carbs: 15, fats: 24 },
+        prepTime: 20
+      },
+      snack: {
+        name: 'Batido de Proteína',
+        ingredients: [
+          '30g proteína whey',
+          '200ml leche deslactosada',
+          '50g plátano congelado',
+          '5g almendras'
+        ],
+        instructions: [
+          'Colocar todos los ingredientes en la licuadora',
+          'Licuar hasta obtener consistencia suave',
+          'Servir inmediatamente'
+        ],
+        macros: { calories: 280, protein: 28, carbs: 22, fats: 8 },
+        prepTime: 5
+      }
+    };
+
+    return recipes[mealType];
   }
 }
