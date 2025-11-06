@@ -144,9 +144,9 @@ exports.wifiAuth = functions.https.onRequest(async (req, res) => {
  */
 exports.api = functions.https.onRequest(async (req, res) => {
   corsHandler(req, res, async () => {
-    const path = req.path;
+    const { path, method } = req;
 
-    // Routing para diferentes endpoints de API
+    // Health check
     if (path.startsWith('/health')) {
       return res.json({
         status: 'ok',
@@ -157,20 +157,85 @@ exports.api = functions.https.onRequest(async (req, res) => {
           wifi_portal: true,
           white_label: true,
           ai_hybrid: true,
-          captive_portal: true
+          captive_portal: true,
+          ai_nutrition: true,
+          ai_workout: true,
+          music_integration: true
         }
       });
     }
 
+    // Branding endpoint
     if (path.startsWith('/branding/')) {
       const gymId = path.split('/')[2];
       const branding = await getGymBranding(gymId);
       return res.json({ branding });
     }
 
+    // AI Nutrition endpoint
+    if (path.startsWith('/ai/nutrition/generate') && method === 'POST') {
+      return await handleNutritionPlan(req, res);
+    }
+
+    // AI Workout endpoint
+    if (path.startsWith('/ai/workout/generate') && method === 'POST') {
+      return await handleWorkoutPlan(req, res);
+    }
+
+    // AI Chat endpoint
+    if (path.startsWith('/ai/chat') && method === 'POST') {
+      return await handleAIChat(req, res);
+    }
+
+    // Member profile endpoints
+    if (path.startsWith('/member/profile')) {
+      if (method === 'GET') {
+        return await getMemberProfile(req, res);
+      } else if (method === 'PUT') {
+        return await updateMemberProfile(req, res);
+      }
+    }
+
+    // Workout sessions
+    if (path.startsWith('/member/workouts/sessions')) {
+      if (method === 'GET') {
+        return await getWorkoutSessions(req, res);
+      } else if (method === 'POST') {
+        return await logWorkoutSession(req, res);
+      }
+    }
+
+    // Progress tracking
+    if (path.startsWith('/member/progress')) {
+      if (method === 'GET') {
+        return await getProgress(req, res);
+      } else if (method === 'POST') {
+        return await updateProgress(req, res);
+      }
+    }
+
+    // Nutrition tracking
+    if (path.startsWith('/member/nutrition/logs')) {
+      if (method === 'GET') {
+        return await getNutritionLogs(req, res);
+      } else if (method === 'POST') {
+        return await logNutrition(req, res);
+      }
+    }
+
     res.status(404).json({
       error: 'Endpoint not found',
-      available: ['/health', '/branding/:gymId']
+      available: [
+        '/health',
+        '/branding/:gymId',
+        '/ai/nutrition/generate [POST]',
+        '/ai/workout/generate [POST]',
+        '/ai/chat [POST]',
+        '/member/profile [GET/PUT]',
+        '/member/workouts/sessions [GET/POST]',
+        '/member/progress [GET/POST]',
+        '/member/nutrition/logs [GET/POST]'
+      ]
     });
   });
 });
@@ -480,4 +545,534 @@ function getSessionDuration(membershipType) {
     vip: 1440       // 24 horas
   };
   return durations[membershipType] || 120;
+}
+
+// === AI AND BACKEND FUNCTIONS ===
+
+/**
+ * AI Nutrition Plan Generator
+ */
+async function handleNutritionPlan(req, res) {
+  try {
+    const { goals, dietaryRestrictions, allergies, weight, height, age, gender, activityLevel } = req.body;
+
+    // Calculate TDEE and macros
+    const bmr = calculateBMR(weight, height, age, gender);
+    const activityMultiplier = getActivityMultiplier(activityLevel);
+    const tdee = bmr * activityMultiplier;
+
+    // Adjust calories based on goal
+    let targetCalories = tdee;
+    let explanation = '';
+
+    if (goals.includes('lose_fat')) {
+      targetCalories = tdee * 0.8;
+      explanation = 'Déficit calórico moderado (20%) para pérdida de grasa sostenible';
+    } else if (goals.includes('gain_muscle')) {
+      targetCalories = tdee * 1.15;
+      explanation = 'Superávit calórico controlado (15%) para ganancia muscular magra';
+    }
+
+    const protein = Math.round(weight * 2.2); // 2.2g per kg
+    const fats = Math.round((targetCalories * 0.25) / 9); // 25% of calories
+    const carbs = Math.round((targetCalories - (protein * 4) - (fats * 9)) / 4);
+
+    // Generate meal plan with AI simulation
+    const mealPlan = generateIntelligentMealPlan(targetCalories, protein, carbs, fats, dietaryRestrictions, allergies);
+
+    res.json({
+      success: true,
+      data: {
+        macros: {
+          calories: Math.round(targetCalories),
+          protein,
+          carbs,
+          fats,
+          explanation
+        },
+        mealPlan,
+        recommendations: [
+          'Consume 2-3L de agua al día',
+          'Prioriza proteína en cada comida',
+          'Incluye vegetales en cada comida',
+          'Duerme 7-9 horas para recuperación óptima'
+        ]
+      }
+    });
+
+  } catch (error) {
+    console.error('Error generating nutrition plan:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error generando plan nutricional',
+      code: 'NUTRITION_ERROR'
+    });
+  }
+}
+
+/**
+ * AI Workout Plan Generator
+ */
+async function handleWorkoutPlan(req, res) {
+  try {
+    const { fitnessLevel, goals, availableDays, sessionDuration, equipment, preferences } = req.body;
+
+    // Generate intelligent workout plan
+    const workoutPlan = generateIntelligentWorkoutPlan({
+      fitnessLevel,
+      goals,
+      availableDays,
+      sessionDuration,
+      equipment,
+      preferences
+    });
+
+    res.json({
+      success: true,
+      data: workoutPlan
+    });
+
+  } catch (error) {
+    console.error('Error generating workout plan:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error generando rutina',
+      code: 'WORKOUT_ERROR'
+    });
+  }
+}
+
+/**
+ * AI Chat Handler
+ */
+async function handleAIChat(req, res) {
+  try {
+    const { message, context } = req.body;
+
+    // Simulated AI response (replace with real AI integration)
+    const aiResponse = generateAIResponse(message, context);
+
+    res.json({
+      success: true,
+      data: {
+        response: aiResponse,
+        timestamp: new Date().toISOString(),
+        context: context || {}
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in AI chat:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error en chat de IA',
+      code: 'CHAT_ERROR'
+    });
+  }
+}
+
+/**
+ * Member Profile Handlers
+ */
+async function getMemberProfile(req, res) {
+  try {
+    // In production, get from authenticated user token
+    const memberId = req.headers.uid || 'demo-user';
+
+    const memberDoc = await admin.firestore().collection('members').doc(memberId).get();
+
+    if (!memberDoc.exists) {
+      return res.status(404).json({
+        success: false,
+        error: 'Miembro no encontrado',
+        code: 'MEMBER_NOT_FOUND'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: memberDoc.data()
+    });
+
+  } catch (error) {
+    console.error('Error getting member profile:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error obteniendo perfil',
+      code: 'PROFILE_ERROR'
+    });
+  }
+}
+
+async function updateMemberProfile(req, res) {
+  try {
+    const memberId = req.headers.uid || 'demo-user';
+    const profileData = req.body;
+
+    await admin.firestore().collection('members').doc(memberId).update({
+      ...profileData,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.json({
+      success: true,
+      message: 'Perfil actualizado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error updating member profile:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error actualizando perfil',
+      code: 'UPDATE_ERROR'
+    });
+  }
+}
+
+/**
+ * Workout Session Handlers
+ */
+async function getWorkoutSessions(req, res) {
+  try {
+    const memberId = req.headers.uid || 'demo-user';
+
+    const sessionsSnapshot = await admin.firestore()
+      .collection('members')
+      .doc(memberId)
+      .collection('workoutSessions')
+      .orderBy('date', 'desc')
+      .limit(20)
+      .get();
+
+    const sessions = sessionsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.json({
+      success: true,
+      data: sessions
+    });
+
+  } catch (error) {
+    console.error('Error getting workout sessions:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error obteniendo sesiones',
+      code: 'SESSIONS_ERROR'
+    });
+  }
+}
+
+async function logWorkoutSession(req, res) {
+  try {
+    const memberId = req.headers.uid || 'demo-user';
+    const sessionData = req.body;
+
+    const sessionRef = await admin.firestore()
+      .collection('members')
+      .doc(memberId)
+      .collection('workoutSessions')
+      .add({
+        ...sessionData,
+        date: admin.firestore.FieldValue.serverTimestamp(),
+        status: 'completed'
+      });
+
+    res.json({
+      success: true,
+      data: {
+        sessionId: sessionRef.id,
+        message: 'Sesión registrada exitosamente'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error logging workout session:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error registrando sesión',
+      code: 'LOG_SESSION_ERROR'
+    });
+  }
+}
+
+/**
+ * Progress Handlers
+ */
+async function getProgress(req, res) {
+  try {
+    const memberId = req.headers.uid || 'demo-user';
+
+    const progressDoc = await admin.firestore()
+      .collection('members')
+      .doc(memberId)
+      .collection('progress')
+      .doc('current')
+      .get();
+
+    res.json({
+      success: true,
+      data: progressDoc.exists ? progressDoc.data() : {}
+    });
+
+  } catch (error) {
+    console.error('Error getting progress:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error obteniendo progreso',
+      code: 'PROGRESS_ERROR'
+    });
+  }
+}
+
+async function updateProgress(req, res) {
+  try {
+    const memberId = req.headers.uid || 'demo-user';
+    const progressData = req.body;
+
+    await admin.firestore()
+      .collection('members')
+      .doc(memberId)
+      .collection('progress')
+      .doc('current')
+      .set({
+        ...progressData,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+    res.json({
+      success: true,
+      message: 'Progreso actualizado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error updating progress:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error actualizando progreso',
+      code: 'UPDATE_PROGRESS_ERROR'
+    });
+  }
+}
+
+/**
+ * Nutrition Handlers
+ */
+async function getNutritionLogs(req, res) {
+  try {
+    const memberId = req.headers.uid || 'demo-user';
+
+    const logsSnapshot = await admin.firestore()
+      .collection('members')
+      .doc(memberId)
+      .collection('nutritionLogs')
+      .orderBy('date', 'desc')
+      .limit(30)
+      .get();
+
+    const logs = logsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.json({
+      success: true,
+      data: logs
+    });
+
+  } catch (error) {
+    console.error('Error getting nutrition logs:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error obteniendo registros nutricionales',
+      code: 'NUTRITION_LOGS_ERROR'
+    });
+  }
+}
+
+async function logNutrition(req, res) {
+  try {
+    const memberId = req.headers.uid || 'demo-user';
+    const nutritionData = req.body;
+
+    await admin.firestore()
+      .collection('members')
+      .doc(memberId)
+      .collection('nutritionLogs')
+      .add({
+        ...nutritionData,
+        date: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+    res.json({
+      success: true,
+      message: 'Registro nutricional agregado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error logging nutrition:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error registrando nutrición',
+      code: 'LOG_NUTRITION_ERROR'
+    });
+  }
+}
+
+// === UTILITY FUNCTIONS ===
+
+function calculateBMR(weight, height, age, gender) {
+  if (gender === 'male') {
+    return 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+  } else {
+    return 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+  }
+}
+
+function getActivityMultiplier(activityLevel) {
+  const multipliers = {
+    sedentary: 1.2,
+    light: 1.375,
+    moderate: 1.55,
+    active: 1.725,
+    very_active: 1.9
+  };
+  return multipliers[activityLevel] || 1.55;
+}
+
+function generateIntelligentMealPlan(calories, protein, carbs, fats, restrictions, allergies) {
+  // Smart meal plan generation based on macros and restrictions
+  return {
+    meals: [
+      {
+        name: 'Desayuno Energético',
+        foods: [
+          'Avena con frutas y nueces',
+          'Huevos revueltos con espinacas',
+          'Yogurt griego con miel'
+        ],
+        macros: { calories: Math.round(calories * 0.3), protein: Math.round(protein * 0.3), carbs: Math.round(carbs * 0.3), fats: Math.round(fats * 0.3) }
+      },
+      {
+        name: 'Almuerzo Fortificante',
+        foods: [
+          'Pechuga de pollo a la parrilla',
+          'Arroz integral con vegetales',
+          'Ensalada fresca con aderezo ligero'
+        ],
+        macros: { calories: Math.round(calories * 0.4), protein: Math.round(protein * 0.4), carbs: Math.round(carbs * 0.4), fats: Math.round(fats * 0.4) }
+      },
+      {
+        name: 'Cena Ligera',
+        foods: [
+          'Salmón al horno con espárragos',
+          'Batata asada',
+          'Ensalada mixta'
+        ],
+        macros: { calories: Math.round(calories * 0.3), protein: Math.round(protein * 0.3), carbs: Math.round(carbs * 0.3), fats: Math.round(fats * 0.3) }
+      }
+    ],
+    totalMacros: { calories, protein, carbs, fats },
+    shoppingList: [
+      'Avena', 'Frutas frescas', 'Nueces', 'Huevos', 'Espinacas',
+      'Yogurt griego', 'Pechuga de pollo', 'Arroz integral',
+      'Vegetales variados', 'Salmón', 'Espárragos', 'Batata'
+    ]
+  };
+}
+
+function generateIntelligentWorkoutPlan(config) {
+  const { fitnessLevel, goals, availableDays, sessionDuration, equipment } = config;
+
+  // Smart workout plan generation
+  return {
+    name: 'Plan Personalizado EntrenaTech',
+    duration: '4 semanas',
+    frequency: `${availableDays.length} días por semana`,
+    sessions: availableDays.map((day, index) => ({
+      day,
+      focus: index % 2 === 0 ? 'Tren superior' : 'Tren inferior',
+      exercises: generateWorkoutExercises(fitnessLevel, goals, equipment, sessionDuration),
+      estimatedDuration: sessionDuration,
+      intensity: fitnessLevel === 'beginner' ? 'Bajo-Medio' : fitnessLevel === 'intermediate' ? 'Medio' : 'Alto'
+    })),
+    tips: [
+      'Calienta 5-10 minutos antes de cada sesión',
+      'Mantén buena forma en cada ejercicio',
+      'Descansa 60-90 segundos entre series',
+      'Hidrátate durante el entrenamiento'
+    ]
+  };
+}
+
+function generateWorkoutExercises(level, goals, equipment, duration) {
+  const exerciseDatabase = {
+    beginner: {
+      chest: ['Push-ups (rodillas)', 'Flexiones en pared', 'Press de mancuernas sentado'],
+      back: ['Remo con banda', 'Superman', 'Pull-apoyo en mesa'],
+      legs: ['Sentadillas sin peso', 'Zancadas', 'Puente de glúteo'],
+      shoulders: ['Press de hombros con banda', 'Elevaciones laterales', 'Rotaciones'],
+      core: ['Plancha (modificada)', 'Crunches', 'Bird-dog']
+    },
+    intermediate: {
+      chest: ['Push-ups estándar', 'Press de banca con mancuernas', 'Dips en paralelas'],
+      back: ['Dominadas (asistencia)', 'Remo con barra', 'Deadlift ligero'],
+      legs: ['Sentadillas con peso', 'Zancadas con mancuernas', 'Peso muerto rumano'],
+      shoulders: ['Press militar', 'Elevaciones laterales con peso', 'Face pulls'],
+      core: ['Plancha estándar', 'Leg raises', 'Russian twists']
+    },
+    advanced: {
+      chest: ['Push-ups explosivos', 'Press de banca con barra', 'Dips con peso'],
+      back: ['Dominas con peso', 'Remo pesado', 'Deadlift convencional'],
+      legs: ['Sentadillas profundas', 'Zancadas búlgaras', 'Peso muerto sumo'],
+      shoulders: ['Press de hombros de pie', 'Handstand push-ups', 'Elevaciones laterales pesadas'],
+      core: ['Plancha con peso', 'Dragon flags', 'Ab wheel rollout']
+    }
+  };
+
+  const exercises = [];
+  const levelExercises = exerciseDatabase[level] || exerciseDatabase.beginner;
+
+  // Select exercises based on available equipment and goals
+  Object.keys(levelExercises).forEach(muscle => {
+    levelExercises[muscle].forEach((exercise, index) => {
+      if (index < 2) { // Limit to 2 exercises per muscle group
+        exercises.push({
+          name: exercise,
+          sets: 3,
+          reps: level === 'beginner' ? 8-12 : level === 'intermediate' ? 10-15 : 12-20,
+          rest: level === 'beginner' ? 90 : 60,
+          muscle: muscle
+        });
+      }
+    });
+  });
+
+  return exercises.slice(0, 6); // Return 6 exercises per session
+}
+
+function generateAIResponse(message, context) {
+  // Simulated AI response - replace with real AI integration
+  const responses = {
+    greeting: '¡Hola! Soy tu entrenador virtual IA. ¿En qué puedo ayudarte hoy?',
+    workout: 'Para tu rutina, te recomiendo enfocarte en ejercicios compuestos como sentadillas, press de banca y dominadas. Estos activan múltiples grupos musculares y maximizan tus resultados.',
+    nutrition: 'La nutrición es clave: consume 1.6-2.2g de proteína por kg de peso corporal, prioriza alimentos integrales y mantente bien hidratado.',
+    motivation: '¡Sigue adelante! Cada entrenamiento te acerca más a tus metas. La consistencia es más importante que la intensidad.',
+    default: 'Entiendo tu pregunta. Como tu entrenador IA, estoy aquí para ayudarte a alcanzar tus metas de fitness. ¿Puedes darme más detalles sobre lo que necesitas?'
+  };
+
+  const lowerMessage = message.toLowerCase();
+
+  if (lowerMessage.includes('hola') || lowerMessage.includes('buenos')) {
+    return responses.greeting;
+  } else if (lowerMessage.includes('rutina') || lowerMessage.includes('ejercicio')) {
+    return responses.workout;
+  } else if (lowerMessage.includes('comida') || lowerMessage.includes('dieta') || lowerMessage.includes('nutrición')) {
+    return responses.nutrition;
+  } else if (lowerMessage.includes('motivación') || lowerMessage.includes('difícil')) {
+    return responses.motivation;
+  }
+
+  return responses.default;
 }

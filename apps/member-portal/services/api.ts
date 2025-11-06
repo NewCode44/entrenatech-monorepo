@@ -1,6 +1,6 @@
 // API Service for Member Portal Backend Integration
 
-const API_BASE_URL = 'http://5.161.196.136/api';
+const API_BASE_URL = 'https://us-central1-entrenapp-2025.cloudfunctions.net/api';
 
 interface ApiResponse<T = any> {
   success: boolean;
