@@ -35,7 +35,8 @@
       "Bash(npx cap add:*)",
       "Bash(npx cap sync:*)",
       "Bash(./gradlew:*)",
-      "Bash(java:*)"
+      "Bash(java:*)",
+      "Bash(where:*)"
     ],
     "deny": [],
     "ask": []
