@@ -29,7 +29,13 @@
       "Bash(firebase --version:*)",
       "Bash(firebase:*)",
       "Bash(echo:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(npm run build:portal:*)",
+      "Bash(npx cap init:*)",
+      "Bash(npx cap add:*)",
+      "Bash(npx cap sync:*)",
+      "Bash(./gradlew:*)",
+      "Bash(java:*)"
     ],
     "deny": [],
     "ask": []

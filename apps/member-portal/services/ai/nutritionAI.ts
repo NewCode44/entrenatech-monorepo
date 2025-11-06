@@ -113,9 +113,8 @@ export class NutritionAI {
     days: number = 7
   ): Promise<MealPlan> {
     try {
-      // Importar el servicio IA híbrido
-      const { aiService } = await import('../../../../../libs/ai/ai-service');
-      const { costMonitor } = await import('../../../../../libs/ai/cost-monitor');
+      // Importar el servicio de API
+      const { apiService } = await import('../api');
 
       // Crear prompt para generación de plan nutricional
       const systemPrompt = `Eres un nutricionista certificado experto en fitness. Genera un plan de comidas personalizado que sea:
@@ -164,21 +163,19 @@ Devuelve el plan en formato JSON con esta estructura:
         { role: 'user' as const, content: userPrompt }
       ];
 
-      // Generar plan con IA usando routing de costos
-      const aiResponse = await aiService.nutrition(messages, 'premium');
-
-      // Registrar uso para monitoreo de costos
-      costMonitor.recordAPIUsage(
-        aiResponse.model || 'unknown',
-        aiResponse.tokens?.input || 0,
-        aiResponse.tokens?.output || 0,
-        aiResponse.cost || 0,
-        'nutrition-plan-generation',
-        true
-      );
+      // Generar plan con IA usando Firebase Functions
+      const aiResponse = await apiService.generateNutritionPlan({
+        profile,
+        macros,
+        days,
+        restrictions: {
+          dietary: profile.dietaryRestrictions || [],
+          allergies: profile.allergies || []
+        }
+      });
 
       // Parsear respuesta de la IA
-      const aiPlan = this.parseAIResponse(aiResponse.content);
+      const aiPlan = this.parseAIResponse(aiResponse.content || aiResponse.plan);
 
       if (aiPlan && aiPlan.meals && aiPlan.meals.length > 0) {
         // Calcular macros totales del plan generado
@@ -255,8 +252,8 @@ Devuelve el plan en formato JSON con esta estructura:
     prepTime: number;
   }> {
     try {
-      // Importar el servicio IA híbrido
-      const { aiService } = await import('../../../../../libs/ai/ai-service');
+      // Importar el servicio de API
+      const { apiService } = await import('../api');
 
       const mealTypeMap = {
         breakfast: 'desayuno',
@@ -291,13 +288,14 @@ Devuelve en formato JSON:
   "prepTime": 25
 }`;
 
-      const messages = [
-        { role: 'system' as const, content: systemPrompt },
-        { role: 'user' as const, content: userPrompt }
-      ];
+      // Generar receta con IA usando Firebase Functions
+      const aiResponse = await apiService.generateRecipe({
+        targetMacros,
+        mealType,
+        restrictions
+      });
 
-      const aiResponse = await aiService.nutrition(messages, 'premium');
-      const recipe = this.parseRecipeResponse(aiResponse.content);
+      const recipe = this.parseRecipeResponse(aiResponse.content || aiResponse.recipe);
 
       if (recipe) {
         return recipe;

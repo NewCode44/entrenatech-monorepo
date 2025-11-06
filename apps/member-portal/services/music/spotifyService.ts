@@ -105,12 +105,15 @@ class SpotifyService {
         this.state.deviceId = device_id;
         this.state.isConnected = true;
 
-        // Try to start playing something immediately when ready
+        // Check user profile and try to load content from user's library when ready
         try {
-          console.log('🎵 Attempting to start playback...');
-          await this.playDemoTrack();
+          console.log('👤 Checking user profile...');
+          await this.checkUserProfile();
+
+          console.log('🎵 Attempting to load user library...');
+          await this.loadUserLibrary();
         } catch (error) {
-          console.log('⚠️ Could not start demo playback:', error);
+          console.log('⚠️ Could not load user library:', error);
         }
 
         this.notifyStateChange();
@@ -177,11 +180,81 @@ class SpotifyService {
     this.notifyStateChange();
   }
 
+  // Check user profile and Premium status
+  async checkUserProfile(): Promise<void> {
+    try {
+      const response = await fetch('https://api.spotify.com/v1/me', {
+        headers: {
+          'Authorization': `Bearer ${this.token}`
+        }
+      });
+
+      if (response.ok) {
+        const profile = await response.json();
+        console.log('👤 User Profile:', {
+          id: profile.id,
+          display_name: profile.display_name,
+          country: profile.country,
+          product: profile.product, // This will show 'premium' if you have Premium
+          explicit_content: profile.explicit_content
+        });
+
+        if (profile.product !== 'premium') {
+          console.warn('⚠️ User does not have Premium. Product:', profile.product);
+        } else {
+          console.log('✅ User has Premium subscription!');
+        }
+      } else {
+        console.error('❌ Failed to get user profile:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error checking user profile:', error);
+    }
+  }
+
+  // Load user's library or playlist to enable playback
+  async loadUserLibrary(): Promise<void> {
+    try {
+      // First try to play user's saved tracks (likes)
+      console.log('💿 Loading user saved tracks...');
+
+      const response = await fetch(`https://api.spotify.com/v1/me/tracks?limit=1`, {
+        headers: {
+          'Authorization': `Bearer ${this.token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+          const trackUri = data.items[0].track.uri;
+          console.log('🎵 Found user track:', data.items[0].track.name);
+          await this.playTrack(trackUri);
+        } else {
+          console.log('📀 No saved tracks, trying playlist context...');
+          // Try to play a context instead of specific track
+          await this.playPlaylist('spotify:playlist:37i9dQZF1DXcBWIGoYBM5M'); // Today's Top Hits
+        }
+      } else {
+        console.log('📀 Could not get saved tracks, trying workout playlist...');
+        await this.playPlaylist('spotify:playlist:37i9dQZF1DX0XUsuxWHRQd'); // Workout playlist
+      }
+    } catch (error) {
+      console.error('❌ Error loading user library:', error);
+      // Fallback to a known working playlist
+      try {
+        await this.playPlaylist('spotify:playlist:37i9dQZF1DX4PP3DA4J0N8'); // Rock Classics
+      } catch (fallbackError) {
+        console.error('❌ Even fallback playlist failed:', fallbackError);
+      }
+    }
+  }
+
   // Play a demo track for testing
   async playDemoTrack(): Promise<boolean> {
     try {
-      // Use a popular workout track URI (Eye of the Tiger - good for testing)
-      const demoTrackUri = 'spotify:track:3CrjKcR1d2QsZgx7e4h8B6';
+      // Use a different popular track that should be more widely available
+      const demoTrackUri = 'spotify:track:4cOdK2wGLETOMsVvYiG5QI'; // Different track
 
       if (!this.state.deviceId) {
         throw new Error('Player not ready');
@@ -439,6 +512,11 @@ class SpotifyService {
   // Get current state
   getState(): MusicServiceState {
     return { ...this.state };
+  }
+
+  // Public method to load user library
+  async loadUserLibraryPublic(): Promise<void> {
+    return this.loadUserLibrary();
   }
 
   // Disconnect player
