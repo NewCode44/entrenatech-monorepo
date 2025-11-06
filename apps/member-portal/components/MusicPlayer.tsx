@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, Music2, ChevronDown, ChevronUp, Spotify } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, Music2, ChevronDown, ChevronUp, Music } from 'lucide-react';
 import spotifyService, { MusicServiceState, SpotifyTrack } from '../services/music/spotifyService';
 import SpotifyAuth from './SpotifyAuth';
 
@@ -7,9 +7,39 @@ const MusicPlayer: React.FC = () => {
   const [isMinimized, setIsMinimized] = useState(true);
   const [showSpotifyAuth, setShowSpotifyAuth] = useState(false);
   const [spotifyToken, setSpotifyToken] = useState<string | null>(null);
-  const [musicState, setMusicState] = useState<MusicServiceState>(spotifyService.getState());
+  const [musicState, setMusicState] = useState<MusicServiceState>({
+  isPlaying: false,
+  currentTrack: null,
+  currentPlaylist: null,
+  volume: 0.75,
+  position: 0,
+  duration: 0,
+  isConnected: false,
+  deviceId: null
+});
 
   useEffect(() => {
+    // Clear any old mock data that might be cached
+    localStorage.removeItem('mock_music_state');
+    localStorage.removeItem('current_track');
+
+    // Reset service state to ensure clean start
+    const currentState = spotifyService.getState();
+    if (currentState.currentTrack || currentState.isPlaying) {
+      console.log('Clearing old music state...');
+      // Force reset the service state
+      setMusicState({
+        isPlaying: false,
+        currentTrack: null,
+        currentPlaylist: null,
+        volume: 0.75,
+        position: 0,
+        duration: 0,
+        isConnected: false,
+        deviceId: null
+      });
+    }
+
     // Load stored Spotify token
     const storedToken = localStorage.getItem('spotify_token');
     if (storedToken) {
@@ -47,7 +77,9 @@ const MusicPlayer: React.FC = () => {
   };
 
   const togglePlay = async () => {
+    console.log('togglePlay clicked, isConnected:', musicState.isConnected);
     if (!musicState.isConnected) {
+      console.log('Opening Spotify auth modal...');
       setShowSpotifyAuth(true);
       return;
     }
@@ -122,7 +154,7 @@ const MusicPlayer: React.FC = () => {
               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
             </div>
           ) : (
-            <Spotify className="h-5 w-5 text-zinc-400" />
+            <Music className="h-5 w-5 text-zinc-400" />
           )}
           <ChevronUp className="h-5 w-5 text-zinc-400" />
         </div>
@@ -165,7 +197,7 @@ const MusicPlayer: React.FC = () => {
           ) : (
             <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-700">
               {musicState.isConnected ? (
-                <Spotify className="h-20 w-20 text-white" />
+                <Music className="h-20 w-20 text-white" />
               ) : (
                 <Music2 className="h-20 w-20 text-white" />
               )}
@@ -258,7 +290,7 @@ const MusicPlayer: React.FC = () => {
         <div className="mb-4 rounded-lg bg-zinc-50 p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Spotify className="h-4 w-4 text-green-500" />
+              <Music className="h-4 w-4 text-green-500" />
               <span className="text-sm font-medium text-zinc-700">Spotify</span>
             </div>
             <div className="flex items-center gap-2">

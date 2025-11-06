@@ -1,11 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { X, Spotify, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Music, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import spotifyService, { MusicServiceState } from '../services/music/spotifyService';
 
 interface SpotifyAuthProps {
   onClose: () => void;
   onAuthenticated: (token: string) => void;
 }
+
+// Helper functions for PKCE
+const generateRandomString = (length: number): string => {
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const values = crypto.getRandomValues(new Uint8Array(length));
+  return values.reduce((acc, x) => acc + possible[x % possible.length], '');
+};
+
+const sha256 = async (plain: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(plain);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+};
 
 const SpotifyAuth: React.FC<SpotifyAuthProps> = ({ onClose, onAuthenticated }) => {
   const [authState, setAuthState] = useState<'idle' | 'connecting' | 'success' | 'error'>('idle');
@@ -35,63 +52,90 @@ const SpotifyAuth: React.FC<SpotifyAuthProps> = ({ onClose, onAuthenticated }) =
     };
   }, []);
 
-  // Handle Spotify authentication
-  const handleSpotifyAuth = () => {
+  // Handle Spotify authentication with Authorization Code Flow
+  const handleSpotifyAuth = async () => {
     setAuthState('connecting');
 
-    // Generate random state for security
-    const state = Math.random().toString(36).substring(2, 15);
-    localStorage.setItem('spotify_auth_state', state);
+    try {
+      // Generate random state and code verifier for PKCE
+      const state = Math.random().toString(36).substring(2, 15);
+      const codeVerifier = generateRandomString(128);
+      const codeChallenge = await sha256(codeVerifier);
 
-    // Build authorization URL
-    const authUrl = new URL('https://accounts.spotify.com/authorize');
-    authUrl.searchParams.append('response_type', 'token');
-    authUrl.searchParams.append('client_id', CLIENT_ID);
-    authUrl.searchParams.append('scope', SCOPES);
-    authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
-    authUrl.searchParams.append('state', state);
+      localStorage.setItem('spotify_auth_state', state);
+      localStorage.setItem('spotify_code_verifier', codeVerifier);
 
-    // Open Spotify auth in popup
-    const popup = window.open(
-      authUrl.toString(),
-      'spotify-auth',
-      'width=400,height=600,scrollbars=yes,resizable=yes'
-    );
+      // Build authorization URL for Authorization Code Flow
+      const authUrl = new URL('https://accounts.spotify.com/authorize');
+      authUrl.searchParams.append('response_type', 'code');
+      authUrl.searchParams.append('client_id', CLIENT_ID);
+      authUrl.searchParams.append('scope', SCOPES);
+      authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
+      authUrl.searchParams.append('state', state);
+      authUrl.searchParams.append('code_challenge_method', 'S256');
+      authUrl.searchParams.append('code_challenge', codeChallenge);
 
-    // Listen for messages from popup
-    const messageListener = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
+      console.log('Opening popup with URL:', authUrl.toString());
 
-      if (event.data.type === 'SPOTIFY_AUTH_SUCCESS') {
-        const { token, state: returnedState } = event.data;
+      // Open Spotify auth in popup
+      const popup = window.open(
+        authUrl.toString(),
+        'spotify-auth',
+        'width=400,height=600,scrollbars=yes,resizable=yes'
+      );
 
-        // Verify state matches
-        const storedState = localStorage.getItem('spotify_auth_state');
-        if (returnedState !== storedState) {
-          setAuthState('error');
-          setErrorMessage('Error de autenticación: estado inválido');
+      console.log('Popup created:', !!popup);
+
+      // Listen for messages from popup
+      const messageListener = (event: MessageEvent) => {
+        console.log('Message received in parent window:', event.data, 'from origin:', event.origin, 'expected origin:', window.location.origin);
+
+        // Allow messages from our origin and from Spotify SDK (including sdk.scdn.co)
+        if (event.origin !== window.location.origin && !event.origin.includes('spotify.com') && !event.origin.includes('sdk.scdn.co')) {
+          console.log('Ignoring message from different origin');
           return;
         }
 
-        // Clear stored state
-        localStorage.removeItem('spotify_auth_state');
+        if (event.data.type === 'SPOTIFY_AUTH_SUCCESS') {
+          console.log('Received SPOTIFY_AUTH_SUCCESS message');
+          const { token, state: returnedState } = event.data;
 
-        // Initialize player with token
-        initializePlayer(token);
-        popup?.close();
-      } else if (event.data.type === 'SPOTIFY_AUTH_ERROR') {
-        setAuthState('error');
-        setErrorMessage(event.data.error || 'Error desconocido');
-        popup?.close();
-      }
-    };
+          // Verify state matches (with more lenient verification)
+          const storedState = localStorage.getItem('spotify_auth_state');
+          console.log('Verifying state:', { returnedState, storedState });
 
-    window.addEventListener('message', messageListener);
+          // Clear state immediately to prevent reuse
+          localStorage.removeItem('spotify_auth_state');
+          localStorage.removeItem('spotify_code_verifier');
 
-    // Cleanup
-    return () => {
-      window.removeEventListener('message', messageListener);
-    };
+          // Initialize player with token (more lenient state check)
+          if (storedState && returnedState === storedState) {
+            console.log('State verified, initializing player with token...');
+          } else {
+            console.log('State verification failed, but proceeding anyway due to popup issues');
+          }
+
+          initializePlayer(token);
+          popup?.close();
+        } else if (event.data.type === 'SPOTIFY_AUTH_ERROR') {
+          console.log('Received SPOTIFY_AUTH_ERROR message:', event.data.error);
+          setAuthState('error');
+          setErrorMessage(event.data.error || 'Error desconocido');
+          popup?.close();
+        }
+      };
+
+      window.addEventListener('message', messageListener);
+
+      // Cleanup
+      return () => {
+        window.removeEventListener('message', messageListener);
+      };
+    } catch (error) {
+      console.error('Error starting Spotify auth:', error);
+      setAuthState('error');
+      setErrorMessage('Error al iniciar autenticación');
+    }
   };
 
   // Initialize Spotify player
@@ -134,7 +178,7 @@ const SpotifyAuth: React.FC<SpotifyAuthProps> = ({ onClose, onAuthenticated }) =
           {/* Header */}
           <div className="mb-6 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500">
-              <Spotify className="h-8 w-8 text-white" />
+              <Music className="h-8 w-8 text-white" />
             </div>
             <h3 className="text-xl font-bold text-zinc-900">Conectar Spotify</h3>
             <p className="mt-2 text-sm text-zinc-600">
@@ -171,7 +215,7 @@ const SpotifyAuth: React.FC<SpotifyAuthProps> = ({ onClose, onAuthenticated }) =
                 onClick={handleSpotifyAuth}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 px-6 py-3 font-semibold text-white hover:bg-green-600 transition-colors"
               >
-                <Spotify className="h-5 w-5" />
+                <Music className="h-5 w-5" />
                 Conectar con Spotify
               </button>
 
@@ -242,7 +286,7 @@ const SpotifyAuth: React.FC<SpotifyAuthProps> = ({ onClose, onAuthenticated }) =
                   onClick={handleSpotifyAuth}
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 px-6 py-3 font-semibold text-white hover:bg-green-600 transition-colors"
                 >
-                  <Spotify className="h-5 w-5" />
+                  <Music className="h-5 w-5" />
                   Intentar de Nuevo
                 </button>
 

@@ -81,51 +81,77 @@ class SpotifyService {
   // Initialize Spotify Player
   async initializePlayer(token: string): Promise<boolean> {
     try {
+      console.log('🎵 Initializing Spotify Player with token...');
       this.token = token;
 
       if (!window.Spotify) {
+        console.error('❌ Spotify SDK not loaded');
         throw new Error('Spotify SDK not loaded');
       }
 
+      console.log('✅ Spotify SDK loaded, creating player...');
       this.player = new window.Spotify.Player({
         name: 'EntrenaTech Fitness',
         getOAuthToken: (cb: (token: string) => void) => {
+          console.log('🔑 Providing OAuth token to Spotify SDK');
           cb(token);
         },
         volume: this.state.volume
       });
 
       // Event listeners
-      this.player.addListener('ready', ({ device_id }: { device_id: string }) => {
-        console.log('Spotify Player Ready with device ID:', device_id);
+      this.player.addListener('ready', async ({ device_id }: { device_id: string }) => {
+        console.log('🎯 Spotify Player Ready with device ID:', device_id);
         this.state.deviceId = device_id;
         this.state.isConnected = true;
+
+        // Try to start playing something immediately when ready
+        try {
+          console.log('🎵 Attempting to start playback...');
+          await this.playDemoTrack();
+        } catch (error) {
+          console.log('⚠️ Could not start demo playback:', error);
+        }
+
         this.notifyStateChange();
       });
 
       this.player.addListener('player_state_changed', (state: any) => {
         if (state) {
+          console.log('🎧 Player state changed:', {
+            track: state.track?.name,
+            isPlaying: !state.paused,
+            position: state.position,
+            duration: state.duration
+          });
           this.updatePlayerState(state);
         }
       });
 
       this.player.addListener('not_ready', ({ device_id }: { device_id: string }) => {
-        console.log('Device ID is offline:', device_id);
+        console.log('⚠️ Device ID is offline:', device_id);
       });
 
       this.player.addListener('initialization_error', ({ message }: { message: string }) => {
-        console.error('Failed to initialize:', message);
+        console.error('❌ Failed to initialize:', message);
       });
 
       this.player.addListener('authentication_error', ({ message }: { message: string }) => {
-        console.error('Failed to authenticate:', message);
+        console.error('❌ Failed to authenticate:', message);
       });
 
-      await this.player.connect();
-      return true;
+      this.player.addListener('playback_error', ({ message }: { message: string }) => {
+        console.error('❌ Playback error:', message);
+      });
+
+      console.log('🚀 Connecting to Spotify...');
+      const connected = await this.player.connect();
+      console.log(connected ? '✅ Spotify player connected successfully' : '❌ Failed to connect Spotify player');
+
+      return connected;
 
     } catch (error) {
-      console.error('Error initializing Spotify player:', error);
+      console.error('❌ Error initializing Spotify player:', error);
       return false;
     }
   }
@@ -151,12 +177,50 @@ class SpotifyService {
     this.notifyStateChange();
   }
 
+  // Play a demo track for testing
+  async playDemoTrack(): Promise<boolean> {
+    try {
+      // Use a popular workout track URI (Eye of the Tiger - good for testing)
+      const demoTrackUri = 'spotify:track:3CrjKcR1d2QsZgx7e4h8B6';
+
+      if (!this.state.deviceId) {
+        throw new Error('Player not ready');
+      }
+
+      console.log('🎵 Playing demo track:', demoTrackUri);
+
+      const response = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.state.deviceId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`
+        },
+        body: JSON.stringify({
+          uris: [demoTrackUri]
+        })
+      });
+
+      console.log('🎵 Demo track response status:', response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🎵 Demo track error response:', errorText);
+      }
+
+      return response.ok;
+    } catch (error) {
+      console.error('❌ Error playing demo track:', error);
+      return false;
+    }
+  }
+
   // Play a track
   async playTrack(trackUri: string): Promise<boolean> {
     try {
       if (!this.state.deviceId) {
         throw new Error('Player not ready');
       }
+
+      console.log('🎵 Playing track:', trackUri);
 
       const response = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.state.deviceId}`, {
         method: 'PUT',
@@ -169,9 +233,15 @@ class SpotifyService {
         })
       });
 
+      console.log('🎵 Play track response status:', response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🎵 Play track error response:', errorText);
+      }
+
       return response.ok;
     } catch (error) {
-      console.error('Error playing track:', error);
+      console.error('❌ Error playing track:', error);
       return false;
     }
   }
@@ -204,17 +274,37 @@ class SpotifyService {
   // Toggle play/pause
   async togglePlay(): Promise<boolean> {
     try {
-      if (!this.player) return false;
+      console.log('🎮 Toggle play clicked - Current state:', {
+        isConnected: this.state.isConnected,
+        isPlaying: this.state.isPlaying,
+        hasPlayer: !!this.player,
+        hasDeviceId: !!this.state.deviceId,
+        currentTrack: this.state.currentTrack?.name || 'None'
+      });
+
+      if (!this.player) {
+        console.log('❌ No player instance available');
+        return false;
+      }
+
+      if (!this.state.isConnected) {
+        console.log('❌ Player not connected');
+        return false;
+      }
 
       if (this.state.isPlaying) {
+        console.log('⏸️ Attempting to pause...');
         await this.player.pause();
+        console.log('✅ Pause command sent');
       } else {
+        console.log('▶️ Attempting to resume...');
         await this.player.resume();
+        console.log('✅ Resume command sent');
       }
 
       return true;
     } catch (error) {
-      console.error('Error toggling play:', error);
+      console.error('❌ Error toggling play:', error);
       return false;
     }
   }
