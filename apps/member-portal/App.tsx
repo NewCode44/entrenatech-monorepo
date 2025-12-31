@@ -9,10 +9,13 @@ import StorePage from './pages/StorePage';
 import SpotifyCallback from './pages/SpotifyCallback';
 import MusicPlayer from './components/MusicPlayer';
 import PageTransition from './components/PageTransition';
+import { AuthProvider, useAuth } from '@/auth';
+import Login from './components/Login';
 
 type PageType = 'home' | 'progress' | 'routines' | 'nutrition' | 'store' | 'classes';
 
-const App: React.FC = () => {
+const AuthenticatedApp: React.FC = () => {
+  const { user, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageType>('home');
 
   // Check if we're on the callback route
@@ -22,6 +25,9 @@ const App: React.FC = () => {
       return;
     }
   }, []);
+
+  if (loading) return <div className="flex items-center justify-center h-screen bg-gray-900 text-white">Cargando...</div>;
+  if (!user) return <Login />;
 
   // If we're on the callback route, render only the callback component
   if (window.location.pathname === '/member/spotify-callback') {
@@ -56,6 +62,14 @@ const App: React.FC = () => {
       </MemberLayout>
       <MusicPlayer />
     </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
   );
 };
 

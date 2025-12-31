@@ -1,10 +1,11 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Member } from '@/types';
-import { MEMBERS_DATA } from '../constants';
 import Icon from '@/ui/Icon';
 import StatsCard from '@/ui/StatsCard';
 import AddMemberModal from '../components/members/AddMemberModal';
+import { useCollection } from '@/hooks';
+import { doc, updateDoc, deleteDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/firebase';
 
 const statusStyles: { [key in Member['status']]: string } = {
     active: 'bg-green-500/20 text-green-400',
@@ -19,7 +20,7 @@ const planStyles: { [key in Member['plan']]: string } = {
 };
 
 const Members: React.FC = () => {
-    const [members, setMembers] = useState<Member[]>(MEMBERS_DATA);
+    const { data: rawMembers, loading } = useCollection('users');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [planFilter, setPlanFilter] = useState('all');
@@ -28,15 +29,42 @@ const Members: React.FC = () => {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const itemsPerPage = 8;
 
-    const handleAddNewMember = (newMemberData: Omit<Member, 'id' | 'joinDate'>) => {
-        const newMember: Member = {
-            ...newMemberData,
-            id: `mem-${Date.now()}`,
-            joinDate: new Date().toISOString().split('T')[0],
-            avatar: newMemberData.avatar || `https://i.pravatar.cc/40?u=mem-${Date.now()}`
-        };
-        setMembers(prevMembers => [newMember, ...prevMembers]);
-        setAddModalOpen(false);
+    const members: Member[] = useMemo(() => {
+        return rawMembers.map((doc: any) => ({
+            id: doc.id,
+            name: `${doc.firstName || ''} ${doc.lastName || ''}`.trim() || 'Sin Nombre',
+            email: doc.email || '',
+            phone: doc.phoneNumber || '',
+            avatar: doc.profileImage || `https://i.pravatar.cc/40?u=${doc.id}`,
+            status: (doc.membershipStatus as Member['status']) || 'inactive',
+            plan: (doc.currentPlan as Member['plan']) || 'basic',
+            joinDate: doc.createdAt?.toDate ? doc.createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        }));
+    }, [rawMembers]);
+
+    const handleAddNewMember = async (newMemberData: Omit<Member, 'id' | 'joinDate'>) => {
+        try {
+            // Split name into first and last name roughly
+            const nameParts = newMemberData.name.split(' ');
+            const firstName = nameParts[0];
+            const lastName = nameParts.slice(1).join(' ');
+
+            await addDoc(collection(db, 'users'), {
+                firstName,
+                lastName,
+                email: newMemberData.email,
+                phoneNumber: newMemberData.phone,
+                profileImage: newMemberData.avatar,
+                membershipStatus: newMemberData.status,
+                currentPlan: newMemberData.plan,
+                role: 'member',
+                createdAt: serverTimestamp()
+            });
+            setAddModalOpen(false);
+        } catch (error) {
+            console.error("Error adding member: ", error);
+            alert("Error al agregar miembro");
+        }
     };
 
     const handleViewMember = (memberId: string) => {
@@ -57,21 +85,29 @@ const Members: React.FC = () => {
         setActiveDropdown(null);
     };
 
-    const handleSuspendMember = (memberId: string) => {
-        setMembers(prevMembers =>
-            prevMembers.map(member =>
-                member.id === memberId
-                    ? { ...member, status: 'suspended' as const }
-                    : member
-            )
-        );
-        setActiveDropdown(null);
+    const handleSuspendMember = async (memberId: string) => {
+        try {
+            const member = members.find(m => m.id === memberId);
+            const newStatus = member?.status === 'suspended' ? 'active' : 'suspended';
+            await updateDoc(doc(db, 'users', memberId), {
+                membershipStatus: newStatus
+            });
+            setActiveDropdown(null);
+        } catch (error) {
+            console.error("Error updating member status: ", error);
+            alert("Error al actualizar estado");
+        }
     };
 
-    const handleDeleteMember = (memberId: string) => {
+    const handleDeleteMember = async (memberId: string) => {
         if (window.confirm('¿Estás seguro de que quieres eliminar este miembro?')) {
-            setMembers(prevMembers => prevMembers.filter(member => member.id !== memberId));
-            setActiveDropdown(null);
+            try {
+                await deleteDoc(doc(db, 'users', memberId));
+                setActiveDropdown(null);
+            } catch (error) {
+                console.error("Error deleting member: ", error);
+                alert("Error al eliminar miembro");
+            }
         }
     };
 
@@ -110,7 +146,11 @@ const Members: React.FC = () => {
 
     const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
     const paginatedMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-    
+
+    if (loading) {
+        return <div className="flex justify-center items-center h-64 text-white">Cargando miembros...</div>;
+    }
+
     return (
         <>
             <div className="space-y-8">
@@ -118,7 +158,7 @@ const Members: React.FC = () => {
                 <div className="md:flex justify-between items-center bg-secondary p-8 rounded-xl border border-gray-800">
                     <div>
                         <h1 className="text-4xl font-black mb-2 flex items-center gap-3">
-                            <Icon name="Users" className="w-10 h-10 text-primary"/>
+                            <Icon name="Users" className="w-10 h-10 text-primary" />
                             <span className="gradient-text">Gestión de Miembros</span>
                         </h1>
                         <p className="text-lg text-gray-500">
@@ -146,9 +186,9 @@ const Members: React.FC = () => {
                     {/* Toolbar */}
                     <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-4">
                         <div className="relative w-full md:w-auto">
-                            <Icon name="Search" className="absolute top-1/2 left-3 -translate-y-1/2 w-5 h-5 text-gray-500"/>
-                            <input 
-                                type="text" 
+                            <Icon name="Search" className="absolute top-1/2 left-3 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                            <input
+                                type="text"
                                 placeholder="Buscar miembro..."
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
@@ -156,7 +196,7 @@ const Members: React.FC = () => {
                             />
                         </div>
                         <div className="flex gap-2">
-                            <select 
+                            <select
                                 value={statusFilter}
                                 onChange={e => setStatusFilter(e.target.value)}
                                 className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-primary focus:border-primary"
@@ -212,69 +252,69 @@ const Members: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4">{member.joinDate}</td>
                                         <td className="px-6 py-4 text-right">
-                                        <div className="relative dropdown-menu">
-                                            <button
-                                                onClick={() => toggleDropdown(member.id)}
-                                                className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
-                                            >
-                                                <Icon name="MoreVertical" className="w-5 h-5" />
-                                            </button>
+                                            <div className="relative dropdown-menu">
+                                                <button
+                                                    onClick={() => toggleDropdown(member.id)}
+                                                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
+                                                >
+                                                    <Icon name="MoreVertical" className="w-5 h-5" />
+                                                </button>
 
-                                            {/* Dropdown Menu */}
-                                            {activeDropdown === member.id && (
-                                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
-                                                    <div className="py-1">
-                                                        <button
-                                                            onClick={() => handleViewMember(member.id)}
-                                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
-                                                        >
-                                                            <Icon name="Eye" className="w-4 h-4" />
-                                                            Ver Detalles
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleEditMember(member.id)}
-                                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
-                                                        >
-                                                            <Icon name="Edit" className="w-4 h-4" />
-                                                            Editar
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleSendMessage(member.id)}
-                                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
-                                                        >
-                                                            <Icon name="Mail" className="w-4 h-4" />
-                                                            Enviar Mensaje
-                                                        </button>
-                                                        {member.status !== 'suspended' ? (
+                                                {/* Dropdown Menu */}
+                                                {activeDropdown === member.id && (
+                                                    <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+                                                        <div className="py-1">
                                                             <button
-                                                                onClick={() => handleSuspendMember(member.id)}
-                                                                className="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700 hover:text-yellow-300 flex items-center gap-2"
+                                                                onClick={() => handleViewMember(member.id)}
+                                                                className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
                                                             >
-                                                                <Icon name="AlertCircle" className="w-4 h-4" />
-                                                                Suspender
+                                                                <Icon name="Eye" className="w-4 h-4" />
+                                                                Ver Detalles
                                                             </button>
-                                                        ) : (
                                                             <button
-                                                                onClick={() => handleSuspendMember(member.id)}
-                                                                className="w-full text-left px-4 py-2 text-sm text-green-400 hover:bg-gray-700 hover:text-green-300 flex items-center gap-2"
+                                                                onClick={() => handleEditMember(member.id)}
+                                                                className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
                                                             >
-                                                                <Icon name="CheckCircle" className="w-4 h-4" />
-                                                                Reactivar
+                                                                <Icon name="Edit" className="w-4 h-4" />
+                                                                Editar
                                                             </button>
-                                                        )}
-                                                        <hr className="my-1 border-gray-700" />
-                                                        <button
-                                                            onClick={() => handleDeleteMember(member.id)}
-                                                            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 flex items-center gap-2"
-                                                        >
-                                                            <Icon name="Trash2" className="w-4 h-4" />
-                                                            Eliminar
-                                                        </button>
+                                                            <button
+                                                                onClick={() => handleSendMessage(member.id)}
+                                                                className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
+                                                            >
+                                                                <Icon name="Mail" className="w-4 h-4" />
+                                                                Enviar Mensaje
+                                                            </button>
+                                                            {member.status !== 'suspended' ? (
+                                                                <button
+                                                                    onClick={() => handleSuspendMember(member.id)}
+                                                                    className="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700 hover:text-yellow-300 flex items-center gap-2"
+                                                                >
+                                                                    <Icon name="AlertCircle" className="w-4 h-4" />
+                                                                    Suspender
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => handleSuspendMember(member.id)}
+                                                                    className="w-full text-left px-4 py-2 text-sm text-green-400 hover:bg-gray-700 hover:text-green-300 flex items-center gap-2"
+                                                                >
+                                                                    <Icon name="CheckCircle" className="w-4 h-4" />
+                                                                    Reactivar
+                                                                </button>
+                                                            )}
+                                                            <hr className="my-1 border-gray-700" />
+                                                            <button
+                                                                onClick={() => handleDeleteMember(member.id)}
+                                                                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 flex items-center gap-2"
+                                                            >
+                                                                <Icon name="Trash2" className="w-4 h-4" />
+                                                                Eliminar
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </td>
+                                                )}
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -287,14 +327,14 @@ const Members: React.FC = () => {
                             Página {currentPage} de {totalPages}
                         </span>
                         <div className="flex gap-2">
-                            <button 
+                            <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
                                 className="px-3 py-2 text-sm bg-gray-800 rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Anterior
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
                                 className="px-3 py-2 text-sm bg-gray-800 rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"

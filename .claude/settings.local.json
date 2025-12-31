@@ -36,7 +36,21 @@
       "Bash(npx cap sync:*)",
       "Bash(./gradlew:*)",
       "Bash(java:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(tree:*)",
+      "WebFetch(domain:entrenapp-2025.web.app)",
+      "Bash(flutter create:*)",
+      "Bash(flutter pub add:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(flutter packages pub run build_runner build:*)",
+      "Bash(dart run build_runner build:*)",
+      "Bash(flutter doctor:*)",
+      "Bash(flutter build:*)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter logs:*)",
+      "Bash(flutter:*)",
+      "Bash(./INSTALAR_APK.bat:*)",
+      "Bash(./BUILD_FLUTTER_APK.bat:*)"
     ],
     "deny": [],
     "ask": []

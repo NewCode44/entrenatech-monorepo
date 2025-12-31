@@ -4,7 +4,11 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
@@ -15,10 +19,27 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@/ui/*": ["libs/ui/*"],
-      "@/types/*": ["libs/types/*"],
-      "@/utils/*": ["libs/utils/*"]
+      "@/ui/*": [
+        "libs/ui/*"
+      ],
+      "@/types/*": [
+        "libs/types/*"
+      ],
+      "@/utils/*": [
+        "libs/utils/*"
+      ],
+      "@/firebase": [
+        "libs/firebase.ts"
+      ],
+      "@/auth": [
+        "libs/AuthContext.tsx"
+      ],
+      "@/hooks": [
+        "libs/useFirestore.ts"
+      ]
     }
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

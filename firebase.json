@@ -79,8 +79,18 @@
     ],
     "rewrites": [
       {
-        "source": "/api/wifi/**",
+        "source": "/api/wifi/start",
         "function": "wifiPortal",
+        "region": "us-central1"
+      },
+      {
+        "source": "/api/wifi/authenticate",
+        "function": "wifiAuth",
+        "region": "us-central1"
+      },
+      {
+        "source": "/api/wifi/status",
+        "function": "wifiStatus",
         "region": "us-central1"
       },
       {
@@ -109,6 +119,10 @@
         "destination": "/login/index.html"
       }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   },
   "functions": {
     "source": "functions",

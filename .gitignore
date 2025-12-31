@@ -44,3 +44,6 @@ coverage/
 Thumbs.db
 .DS_Store
 nul
+
+# Auto Claude data directory
+.auto-claude/

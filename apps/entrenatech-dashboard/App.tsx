@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
@@ -15,10 +14,16 @@ import Settings from './pages/Settings';
 import NutritionServices from './pages/NutritionServices';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { Page, Routine } from '@/types/index';
+import { AuthProvider, useAuth } from '@/auth';
+import Login from './components/Login';
 
-const App: React.FC = () => {
+const AuthenticatedApp: React.FC = () => {
+  const { user, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('Dashboard');
   const [routineToEdit, setRoutineToEdit] = useState<Routine | null>(null);
+
+  if (loading) return <div className="flex items-center justify-center h-screen">Cargando...</div>;
+  if (!user) return <Login />;
 
   const handleStartEditRoutine = (routine: Routine) => {
     setRoutineToEdit(routine);
@@ -61,6 +66,14 @@ const App: React.FC = () => {
       {renderPage()}
       <PWAInstallPrompt />
     </Layout>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
   );
 };
 

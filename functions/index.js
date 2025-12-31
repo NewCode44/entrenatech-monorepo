@@ -7,6 +7,13 @@ admin.initializeApp();
 
 const corsHandler = cors({ origin: true });
 
+// Importar funciones del portal cautivo Mikrotik
+const {
+  captivePortal,
+  authenticatePortal,
+  verifyMikrotikToken
+} = require('./mikrotik-portal');
+
 /**
  * Función principal del portal WiFi - genera página de login personalizada
  */
@@ -136,6 +143,24 @@ exports.wifiAuth = functions.https.onRequest(async (req, res) => {
         code: 'INTERNAL_ERROR'
       });
     }
+  });
+});
+
+/**
+ * Estado de la sesión WiFi
+ */
+exports.wifiStatus = functions.https.onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    res.json({
+      valid: true,
+      session: {
+        timeRemaining: 420, // minutos
+        dataUsage: {
+          download: 125, // MB
+          upload: 45   // MB
+        }
+      }
+    });
   });
 });
 
@@ -546,6 +571,11 @@ function getSessionDuration(membershipType) {
   };
   return durations[membershipType] || 120;
 }
+
+// Exportar las nuevas funciones del portal cautivo Mikrotik
+exports.captivePortal = captivePortal;
+exports.authenticatePortal = authenticatePortal;
+exports.verifyMikrotikToken = verifyMikrotikToken;
 
 // === AI AND BACKEND FUNCTIONS ===
 
